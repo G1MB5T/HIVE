@@ -1,0 +1,4073 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="HIVE — co-op order management dashboard">
+<title>HIVE — Order Management</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700;9..144,800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --honey: #f59e0b;
+    --honey-light: #fcd34d;
+    --honey-dark: #b45309;
+    /* Warm coffee/graphite dark theme */
+    --bg: #14110d;
+    --panel: #1f1a14;
+    --comb: #2b251e;
+    --comb-light: #3d342a;
+    --border: #4d4131;
+    --text: #f4ede1;
+    --muted: #a89c87;
+    --cream: #fce4b3;
+    --green: #10b981;
+    --red: #ef4444;
+    --blue: #60a5fa;
+    --purple: #c084fc;
+    --teal: #2dd4bf;
+  }
+  [data-theme="light"] {
+    --bg: #fef9ed; --panel: #ffffff; --border: #e5d3a3;
+    --text: #1c1917; --muted: #78716c;
+    --comb: #fef3c7; --comb-light: #fde68a; --cream: #78350f;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-feature-settings: 'cv11', 'ss01', 'ss03';
+    background: var(--bg); color: var(--text);
+    min-height: 100vh;
+    transition: background 0.3s, color 0.3s;
+    line-height: 1.45;
+    -webkit-font-smoothing: antialiased;
+  }
+  body::before {
+    content: ''; position: fixed; inset: 0;
+    background-image:
+      radial-gradient(circle at 15% 25%, rgba(245,158,11,0.07), transparent 45%),
+      radial-gradient(circle at 85% 75%, rgba(180,83,9,0.05), transparent 45%),
+      url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' width='100' height='100'><g fill='none' stroke='%23f59e0b' stroke-opacity='0.045' stroke-width='1'><polygon points='50,5 87,27 87,73 50,95 13,73 13,27'/><polygon points='50,5 87,27 87,73 50,95 13,73 13,27' transform='translate(50,57)'/><polygon points='50,5 87,27 87,73 50,95 13,73 13,27' transform='translate(-50,57)'/><polygon points='50,5 87,27 87,73 50,95 13,73 13,27' transform='translate(50,-57)'/><polygon points='50,5 87,27 87,73 50,95 13,73 13,27' transform='translate(-50,-57)'/></g></svg>");
+    background-size: auto, auto, 220px 220px;
+    pointer-events: none; z-index: 0;
+  }
+  /* Display headings */
+  h1, h2, h3, .display, .logo { font-family: 'Fraunces', 'Inter', serif; letter-spacing: -0.01em; }
+
+  /* ============ HEADER ============ */
+  header {
+    background: linear-gradient(135deg, var(--comb), var(--panel));
+    border-bottom: 2px solid var(--honey);
+    padding: 14px 24px;
+    display: flex; align-items: center; gap: 14px;
+    position: sticky; top: 0; z-index: 60;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    flex-wrap: wrap;
+  }
+  .logo {
+    font-size: 26px; font-weight: 800;
+    background: linear-gradient(135deg, var(--honey-light), var(--honey));
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    letter-spacing: 0.08em;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .logo-mark {
+    width: 40px; height: 40px;
+    flex-shrink: 0;
+    filter: drop-shadow(0 2px 8px rgba(245,158,11,0.35));
+    animation: logoFloat 4s ease-in-out infinite;
+    -webkit-text-fill-color: initial;
+  }
+  @keyframes logoFloat {
+    0%,100% { transform: translateY(0) rotate(-3deg); }
+    50% { transform: translateY(-3px) rotate(3deg); }
+  }
+  .date-pill {
+    background: var(--comb-light);
+    padding: 6px 13px; border-radius: 999px;
+    font-size: 13px; color: var(--cream);
+    border: 1px solid var(--border);
+  }
+  .conn { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--muted); }
+  .conn-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); animation: blink 2s infinite; }
+  @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+  .role-selector, .header-btn {
+    background: var(--comb-light); border: 1px solid var(--honey);
+    color: var(--cream); padding: 8px 13px; border-radius: 8px;
+    font-size: 13px; cursor: pointer; font-weight: 600;
+    transition: transform 0.1s, box-shadow 0.15s;
+    position: relative;
+  }
+  .header-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 10px rgba(245,158,11,0.3); }
+  .header-btn.primary {
+    background: linear-gradient(135deg, var(--honey), var(--honey-dark));
+    color: white; border-color: var(--honey);
+  }
+  .header-btn .badge {
+    position: absolute; top: -6px; right: -6px;
+    background: var(--red); color: white;
+    font-size: 10px; font-weight: 900;
+    min-width: 18px; height: 18px;
+    border-radius: 999px;
+    display: flex; align-items: center; justify-content: center;
+    padding: 0 5px;
+    box-shadow: 0 0 0 2px var(--panel);
+    animation: badgePop 0.4s ease-out;
+  }
+  @keyframes badgePop { 0% { transform: scale(0); } 60% { transform: scale(1.3); } 100% { transform: scale(1); } }
+  .header-btn.pending-active { animation: pendingPulse 2s infinite; }
+  @keyframes pendingPulse {
+    0%,100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.4); }
+    50% { box-shadow: 0 0 0 6px rgba(239,68,68,0); }
+  }
+
+  .header-actions { display: flex; gap: 8px; margin-left: auto; align-items: center; flex-wrap: wrap; }
+  .quick-metrics { display: flex; gap: 14px; padding: 0 8px; border-left: 1px solid var(--border); margin-left: 4px; }
+  .qm { text-align: center; }
+  .qm-num { font-size: 20px; font-weight: 800; color: var(--honey-light); line-height: 1; }
+  .qm-lbl { font-size: 9px; text-transform: uppercase; color: var(--muted); letter-spacing: 1px; margin-top: 3px; }
+
+  /* ============ STAGE TABS ============ */
+  .stage-tabs-wrap {
+    background: var(--panel);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 20px;
+    position: sticky; top: 62px; z-index: 50;
+    overflow-x: auto; scrollbar-width: thin;
+  }
+  .stage-tabs { display: flex; gap: 6px; min-width: max-content; }
+  .stage-tab {
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 18px;
+    background: var(--comb); color: var(--muted);
+    border: 2px solid transparent;
+    border-radius: 999px;
+    font-size: 13px; font-weight: 700;
+    cursor: pointer; white-space: nowrap;
+    transition: all 0.2s;
+  }
+  .stage-tab:hover { color: var(--text); border-color: var(--border); }
+  .stage-tab .count {
+    background: var(--comb-light); padding: 3px 10px; border-radius: 999px;
+    font-size: 12px; font-weight: 800; min-width: 28px; text-align: center;
+  }
+  .stage-tab.active { color: white; }
+  .stage-tab.active .count { background: rgba(0,0,0,0.25); color: white; }
+  .stage-tab.received.active     { background: var(--blue); border-color: var(--blue); color: var(--bg); }
+  .stage-tab.received.active .count { background: rgba(0,0,0,0.2); color: var(--bg); }
+  .stage-tab.acknowledged.active { background: var(--honey); border-color: var(--honey); color: var(--bg); }
+  .stage-tab.acknowledged.active .count { background: rgba(0,0,0,0.2); color: var(--bg); }
+  .stage-tab.prepared.active     { background: var(--honey-light); color: var(--bg); border-color: var(--honey-light); }
+  .stage-tab.prepared.active .count { background: rgba(0,0,0,0.2); color: var(--bg); }
+  .stage-tab.picking.active      { background: var(--purple); border-color: var(--purple); color: var(--bg); }
+  .stage-tab.picking.active .count { background: rgba(0,0,0,0.2); color: var(--bg); }
+  .stage-tab.enroute.active      { background: var(--teal); border-color: var(--teal); color: var(--bg); }
+  .stage-tab.enroute.active .count { background: rgba(0,0,0,0.2); color: var(--bg); }
+  .stage-tab.completed.active    { background: var(--green); border-color: var(--green); color: var(--bg); }
+  .stage-tab.completed.active .count { background: rgba(0,0,0,0.2); color: var(--bg); }
+  .stage-tab.drop-target { transform: scale(1.1); box-shadow: 0 0 0 3px var(--honey); }
+  .stage-tab.pulse { animation: tabPulse 0.6s ease-out; }
+  @keyframes tabPulse { 0% { transform: scale(1); } 50% { transform: scale(1.08); } 100% { transform: scale(1); } }
+
+  /* ============ TOOLBAR ============ */
+  .toolbar {
+    max-width: 900px; margin: 14px auto 0; padding: 0 20px;
+    display: flex; gap: 8px; flex-wrap: wrap; align-items: center;
+  }
+  .toolbar input.search {
+    flex: 1; min-width: 200px;
+    padding: 10px 14px;
+    background: var(--panel); color: var(--text);
+    border: 1px solid var(--border); border-radius: 8px;
+    font-size: 14px;
+  }
+  .toolbar input.search:focus { outline: none; border-color: var(--honey); box-shadow: 0 0 0 2px rgba(245,158,11,0.2); }
+  .filter-pill {
+    padding: 8px 14px;
+    background: var(--panel); color: var(--muted);
+    border: 1px solid var(--border); border-radius: 999px;
+    font-size: 12px; cursor: pointer; font-weight: 600;
+    transition: all 0.15s;
+  }
+  .filter-pill:hover { color: var(--text); border-color: var(--honey); }
+  .filter-pill.on { background: var(--honey); color: var(--bg); border-color: var(--honey); }
+  .toolbar select {
+    padding: 8px 12px;
+    background: var(--panel); color: var(--text);
+    border: 1px solid var(--border); border-radius: 8px;
+    font-size: 13px; cursor: pointer;
+  }
+  .clear-filters { color: var(--muted); font-size: 12px; background: none; border: none; cursor: pointer; text-decoration: underline; }
+
+  /* ============ STAGE HEADER ============ */
+  .stage-header {
+    max-width: 900px; margin: 22px auto 14px; padding: 0 20px;
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 10px;
+  }
+  .stage-header h1 {
+    font-size: 26px; font-weight: 800;
+    display: flex; align-items: center; gap: 12px;
+    color: var(--text);
+  }
+  .stage-header h1 .stage-icon { font-size: 30px; }
+  .stage-header h1 .stage-count {
+    font-size: 16px; color: var(--muted);
+    background: var(--panel); padding: 4px 12px; border-radius: 999px;
+    border: 1px solid var(--border); font-weight: 700;
+  }
+  .stage-subtitle { color: var(--muted); font-size: 13px; }
+
+  /* ============ CARD STREAM ============ */
+  .card-stream {
+    max-width: 900px; margin: 0 auto; padding: 0 20px 100px;
+    display: flex; flex-direction: column; gap: 14px;
+    position: relative; z-index: 1;
+  }
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-left: 5px solid var(--honey);
+    border-radius: 14px;
+    padding: 22px 26px;
+    cursor: grab;
+    animation: cardIn 0.4s ease-out;
+    transition: box-shadow 0.2s, border-color 0.2s, transform 0.2s, opacity 0.2s;
+    position: relative;
+  }
+  .card:active { cursor: grabbing; }
+  .card:hover { box-shadow: 0 12px 32px rgba(0,0,0,0.45); border-color: var(--honey); transform: translateY(-2px); }
+  .card.dragging { opacity: 0.4; }
+  .card.priority-high { border-left-color: var(--red); }
+  .card.priority-high::after {
+    content: '🚨'; position: absolute; top: 16px; right: 20px;
+    font-size: 18px;
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%,100% { transform: scale(1); }
+    50% { transform: scale(1.15); }
+  }
+  @keyframes cardIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .card.flash { animation: flash 1s ease-out; }
+  @keyframes flash {
+    0% { background: var(--honey); }
+    100% { background: var(--panel); }
+  }
+  .card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; gap: 12px; padding-right: 30px; }
+  .card-customer { font-weight: 800; font-size: 22px; color: var(--text); line-height: 1.2; }
+  .card-time-chip {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 12px; color: var(--honey-light);
+    background: rgba(245,158,11,0.1); padding: 6px 12px;
+    border-radius: 999px; font-weight: 700;
+    border: 1px solid rgba(245,158,11,0.3);
+    white-space: nowrap;
+  }
+  .card-time-chip.urgent { color: var(--red); background: rgba(239,68,68,0.12); border-color: rgba(239,68,68,0.3); animation: pulse 2s infinite; }
+  .card-meta-row { display: flex; flex-wrap: wrap; gap: 10px 16px; margin-bottom: 10px; font-size: 14px; color: var(--muted); align-items: center; }
+  .card-meta-row strong { color: var(--text); font-weight: 600; }
+  .card-fulfill {
+    display: inline-flex; align-items: center; gap: 5px;
+    background: var(--comb); padding: 4px 11px; border-radius: 999px;
+    font-size: 13px; font-weight: 600;
+  }
+  .card-needed { display: inline-flex; align-items: center; gap: 5px; color: var(--cream); font-weight: 600; }
+  .card-depts { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+  .card-dept {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 11px;
+    padding: 4px 10px; border-radius: 999px;
+    text-transform: uppercase; font-weight: 700;
+    letter-spacing: 0.5px;
+  }
+  .dept-grocery { background: rgba(134,239,172,0.18); color: #86efac; }
+  .dept-meat    { background: rgba(252,165,165,0.18); color: #fca5a5; }
+  .dept-deli    { background: rgba(252,211,77,0.18); color: #fcd34d; }
+  .dept-bakery  { background: rgba(216,180,254,0.18); color: #d8b4fe; }
+  .dept-produce { background: rgba(110,231,183,0.18); color: #6ee7b7; }
+  [data-theme="light"] .dept-grocery { background: #dcfce7; color: #166534; }
+  [data-theme="light"] .dept-meat    { background: #fee2e2; color: #991b1b; }
+  [data-theme="light"] .dept-deli    { background: #fef3c7; color: #92400e; }
+  [data-theme="light"] .dept-bakery  { background: #f3e8ff; color: #6b21a8; }
+  [data-theme="light"] .dept-produce { background: #d1fae5; color: #065f46; }
+
+  .card-notes {
+    background: rgba(252,228,179,0.06);
+    border-left: 3px solid var(--honey-light);
+    padding: 10px 14px; border-radius: 6px;
+    font-size: 13px; color: var(--cream); margin-bottom: 14px;
+  }
+  .card-lines { background: var(--comb); border-radius: 8px; padding: 10px 14px; margin-bottom: 14px; }
+  .card-lines-title {
+    font-size: 11px; text-transform: uppercase; letter-spacing: 1px;
+    color: var(--muted); font-weight: 700; margin-bottom: 8px;
+  }
+  .card-line {
+    display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: center;
+    padding: 8px 0; font-size: 14px;
+    border-bottom: 1px dashed var(--border);
+  }
+  .card-line:last-child { border-bottom: none; }
+  .card-line.dimmed { opacity: 0.4; }
+  .card-line.picked { opacity: 0.6; }
+  .card-line.picked .line-text { text-decoration: line-through; }
+  .line-body { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+  .line-text { color: var(--text); font-size: 14px; line-height: 1.3; }
+  .line-text .line-qty-num { color: var(--honey-light); font-weight: 800; }
+  .line-meta { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  .line-loc {
+    font-size: 11px; color: var(--muted);
+    background: var(--panel); padding: 2px 8px; border-radius: 999px;
+    border: 1px solid var(--border);
+    display: inline-flex; align-items: center; gap: 4px;
+  }
+  .line-stage-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .stage-dot-received     { background: var(--blue); }
+  .stage-dot-acknowledged { background: var(--honey); }
+  .stage-dot-prepared     { background: var(--honey-light); }
+  .stage-dot-picking      { background: var(--purple); }
+  .stage-dot-enroute      { background: var(--teal); }
+  .stage-dot-completed    { background: var(--green); }
+  .line-advance {
+    background: transparent; color: var(--honey);
+    border: 1px solid var(--border); border-radius: 6px;
+    padding: 5px 10px; cursor: pointer; font-size: 12px; font-weight: 700;
+    transition: all 0.15s;
+  }
+  .line-advance:hover { background: var(--honey); color: var(--bg); border-color: var(--honey); }
+  .line-advance:disabled { opacity: 0.3; cursor: not-allowed; }
+
+  .progress { height: 6px; background: var(--comb); border-radius: 4px; overflow: hidden; margin-bottom: 14px; }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--honey-dark), var(--honey), var(--honey-light));
+    transition: width 0.6s ease-out; border-radius: 4px;
+  }
+
+  .card-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn {
+    padding: 11px 18px;
+    background: var(--comb-light); color: var(--text);
+    border: 1px solid var(--border); border-radius: 8px;
+    font-size: 13px; cursor: pointer; font-weight: 700;
+    transition: background 0.15s, transform 0.1s, box-shadow 0.15s;
+  }
+  .btn:hover { background: var(--honey); color: var(--bg); border-color: var(--honey); transform: translateY(-1px); }
+  .btn:active { transform: translateY(0); }
+  .btn.primary { background: linear-gradient(135deg, var(--honey), var(--honey-dark)); color: white; border-color: var(--honey); flex: 1; min-width: 160px; }
+  .btn.primary:hover { box-shadow: 0 6px 18px rgba(245,158,11,0.4); background: linear-gradient(135deg, var(--honey), var(--honey-dark)); color: white; }
+  .btn.success { background: linear-gradient(135deg, var(--green), #047857); color: white; border-color: var(--green); flex: 1; min-width: 160px; }
+  .btn.success:hover { box-shadow: 0 6px 18px rgba(16,185,129,0.4); background: linear-gradient(135deg, var(--green), #047857); color: white; }
+  .btn.purple { background: linear-gradient(135deg, var(--purple), #9333ea); color: white; border-color: var(--purple); flex: 1; min-width: 160px; }
+  .btn.purple:hover { box-shadow: 0 6px 18px rgba(168,85,247,0.4); background: linear-gradient(135deg, var(--purple), #9333ea); color: white; }
+  .btn.teal { background: linear-gradient(135deg, var(--teal), #0d9488); color: white; border-color: var(--teal); flex: 1; min-width: 160px; }
+  .btn.teal:hover { background: linear-gradient(135deg, var(--teal), #0d9488); color: white; }
+  .btn.ghost { background: transparent; color: var(--honey); border: 1px solid var(--honey); }
+  .btn.ghost:hover { background: var(--honey); color: var(--bg); }
+  .btn.danger-ghost { background: transparent; color: var(--red); border: 1px solid var(--red); }
+  .btn.danger-ghost:hover { background: var(--red); color: white; border-color: var(--red); }
+  .btn.small { padding: 7px 12px; font-size: 12px; }
+
+  /* ============ EMPTY STATE ============ */
+  .empty-state { text-align: center; padding: 60px 20px; color: var(--muted); }
+  .empty-icon { font-size: 64px; opacity: 0.3; margin-bottom: 12px; }
+  .empty-title { font-size: 18px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+  .empty-sub { font-size: 13px; margin-bottom: 18px; }
+  .empty-jumps { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+
+  /* ============ DRAWERS ============ */
+  .drawer-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.65);
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.3s; z-index: 95;
+    backdrop-filter: blur(3px);
+  }
+  .drawer-overlay.open { opacity: 1; pointer-events: auto; }
+  .drawer {
+    position: fixed; top: 0; right: -460px;
+    width: 440px; max-width: 100vw;
+    height: 100vh;
+    background: var(--panel);
+    border-left: 2px solid var(--honey);
+    box-shadow: -10px 0 40px rgba(0,0,0,0.6);
+    transition: right 0.3s cubic-bezier(.2,.8,.2,1);
+    z-index: 96;
+    overflow-y: auto;
+    padding: 20px 22px 40px;
+  }
+  .drawer.open { right: 0; }
+  .drawer-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding-bottom: 14px; margin-bottom: 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  .drawer-title {
+    font-size: 18px; font-weight: 800; color: var(--honey-light);
+    display: flex; align-items: center; gap: 10px;
+  }
+  .drawer-close {
+    background: none; border: none; color: var(--muted);
+    font-size: 28px; cursor: pointer; line-height: 1;
+  }
+  .drawer-close:hover { color: var(--honey); }
+
+  /* ============ FORM ============ */
+  .form-group { margin-bottom: 12px; }
+  .form-group label {
+    display: block; font-size: 10px; text-transform: uppercase;
+    letter-spacing: 0.8px; color: var(--muted); margin-bottom: 5px;
+  }
+  .form-group input, .form-group select, .form-group textarea {
+    width: 100%; padding: 9px 11px;
+    background: var(--comb); color: var(--text);
+    border: 1px solid var(--border); border-radius: 6px;
+    font-size: 14px; font-family: inherit;
+  }
+  .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+    outline: none; border-color: var(--honey);
+    box-shadow: 0 0 0 2px rgba(245,158,11,0.2);
+  }
+  .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .checkbox-row { display: flex; align-items: center; gap: 8px; margin: 10px 0; }
+  .checkbox-row input { width: auto; accent-color: var(--honey); }
+  .checkbox-row label { font-size: 13px; color: var(--cream); }
+
+  .line-rows { display: flex; flex-direction: column; gap: 8px; margin-bottom: 8px; }
+  .line-row {
+    background: var(--comb);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--honey);
+    border-radius: 6px;
+    padding: 9px;
+    display: flex; flex-direction: column; gap: 6px;
+  }
+  .line-row .grid-3 { display: grid; grid-template-columns: 1fr 60px 65px; gap: 6px; }
+  .line-row .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .line-row input, .line-row select {
+    padding: 7px 8px;
+    background: var(--panel); color: var(--text);
+    border: 1px solid var(--border); border-radius: 4px;
+    font-size: 13px; font-family: inherit; width: 100%;
+  }
+  .line-row input:focus, .line-row select:focus { outline: none; border-color: var(--honey); }
+  .line-remove {
+    background: transparent; color: var(--red);
+    border: 1px solid var(--red); border-radius: 4px;
+    cursor: pointer; padding: 4px 10px;
+    font-size: 11px; font-weight: 700; align-self: flex-end;
+  }
+  .line-remove:hover { background: var(--red); color: white; }
+  .add-line {
+    width: 100%; padding: 9px;
+    background: transparent; color: var(--honey);
+    border: 1px dashed var(--honey); border-radius: 6px;
+    cursor: pointer; font-size: 13px; font-weight: 600;
+    transition: background 0.15s;
+  }
+  .add-line:hover { background: rgba(245,158,11,0.1); }
+  .btn-submit {
+    width: 100%; padding: 13px;
+    background: linear-gradient(135deg, var(--honey), var(--honey-dark));
+    color: white; border: none; border-radius: 8px;
+    font-weight: 700; font-size: 14px; cursor: pointer;
+    text-transform: uppercase; letter-spacing: 1.5px;
+    transition: transform 0.15s, box-shadow 0.15s;
+    margin-top: 8px;
+  }
+  .btn-submit:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(245,158,11,0.4); }
+
+  /* ============ PENDING CARD (drawer) ============ */
+  .pending-card {
+    background: var(--comb);
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--red);
+    border-radius: 10px; padding: 14px;
+    margin-bottom: 10px;
+    animation: cardIn 0.3s ease-out;
+  }
+  .pending-card.priority { border-left-color: var(--red); box-shadow: 0 0 0 1px rgba(239,68,68,0.2); }
+  .pending-customer { font-size: 17px; font-weight: 800; margin-bottom: 4px; }
+  .pending-meta { font-size: 12px; color: var(--muted); margin-bottom: 8px; }
+  .pending-items {
+    font-size: 12px; color: var(--cream);
+    background: var(--panel); border-radius: 6px;
+    padding: 8px 10px; margin-bottom: 8px;
+  }
+  .pending-recipients {
+    font-size: 11px; color: var(--muted);
+    background: var(--panel); border-radius: 6px;
+    padding: 8px 10px; margin-bottom: 10px;
+    border-left: 2px solid var(--honey);
+  }
+  .pending-recipients strong { color: var(--honey-light); display: block; margin-bottom: 3px; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .pending-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+
+  /* ============ EFF STATS / HISTORY ============ */
+  .eff-stats { display: grid; gap: 8px; margin-bottom: 18px; }
+  .eff-row {
+    display: flex; justify-content: space-between;
+    padding: 12px 14px;
+    background: var(--comb); border-radius: 8px;
+    font-size: 13px;
+    border-left: 3px solid var(--honey);
+  }
+  .eff-row .v { color: var(--honey-light); font-weight: 800; font-size: 16px; }
+  .history-item {
+    padding: 10px 12px; margin-bottom: 7px;
+    background: var(--comb); border-radius: 6px;
+    border-left: 2px solid var(--honey);
+    font-size: 12px; animation: cardIn 0.3s ease-out;
+  }
+  .history-time { color: var(--muted); font-size: 11px; }
+  .history-action { color: var(--cream); margin-top: 3px; }
+
+  /* ============ HONEYCOMB ============ */
+  .honeycomb { position: relative; width: 252px; height: 156px; margin: 8px auto 14px; }
+  .hex-wrap { position: absolute; width: 80px; height: 92px; cursor: pointer; transition: transform 0.2s; }
+  .hex-wrap:hover { transform: scale(1.08); z-index: 2; }
+  .hex-wrap[data-pos="0"] { top: 0; left: 0; }
+  .hex-wrap[data-pos="1"] { top: 0; left: 86px; }
+  .hex-wrap[data-pos="2"] { top: 0; left: 172px; }
+  .hex-wrap[data-pos="3"] { top: 64px; left: 43px; }
+  .hex-wrap[data-pos="4"] { top: 64px; left: 129px; }
+  .hex {
+    width: 100%; height: 100%;
+    clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+    background: var(--comb);
+    display: flex; align-items: center; justify-content: center;
+    flex-direction: column; text-align: center;
+    transition: background 0.3s; padding: 8px;
+  }
+  .hex-wrap.active .hex { background: var(--honey); }
+  .hex-wrap.active .hex .hex-name, .hex-wrap.active .hex .hex-count { color: var(--bg); }
+  .hex-wrap.ping .hex { animation: hexPing 1s ease-out; }
+  @keyframes hexPing {
+    0% { background: var(--comb); }
+    25% { background: var(--honey-light); transform: scale(1.08); }
+    100% { background: var(--comb); }
+  }
+  .hex-wrap.active.ping .hex { animation: hexPingActive 1s ease-out; }
+  @keyframes hexPingActive {
+    0% { background: var(--honey); }
+    25% { background: var(--honey-light); transform: scale(1.08); }
+    100% { background: var(--honey); }
+  }
+  .hex-icon { font-size: 20px; line-height: 1; margin-bottom: 2px; }
+  .hex-name { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text); }
+  .hex-count { font-size: 16px; font-weight: 800; color: var(--honey-light); line-height: 1; }
+
+  .section-title {
+    font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px;
+    color: var(--honey-light); font-weight: 700;
+    margin: 18px 0 10px;
+    padding-bottom: 8px; border-bottom: 1px solid var(--border);
+  }
+
+  /* ============ EMAIL SETTINGS ============ */
+  .email-group {
+    background: var(--comb);
+    border-radius: 8px; padding: 12px;
+    margin-bottom: 10px;
+    border-left: 3px solid var(--honey);
+  }
+  .email-group-title {
+    font-size: 12px; font-weight: 800;
+    color: var(--honey-light); margin-bottom: 8px;
+    display: flex; align-items: center; gap: 6px;
+    text-transform: uppercase; letter-spacing: 0.5px;
+  }
+  .email-input {
+    width: 100%; padding: 7px 9px;
+    background: var(--panel); color: var(--text);
+    border: 1px solid var(--border); border-radius: 5px;
+    font-size: 13px; font-family: inherit;
+    margin-bottom: 5px;
+  }
+  .email-input:focus { outline: none; border-color: var(--honey); }
+  .email-row {
+    display: grid; grid-template-columns: 1fr auto; gap: 6px;
+    margin-bottom: 5px; align-items: center;
+  }
+  .email-remove {
+    background: transparent; color: var(--red);
+    border: 1px solid var(--red); border-radius: 5px;
+    width: 30px; height: 30px;
+    cursor: pointer; font-size: 16px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    padding: 0;
+  }
+  .email-remove:hover { background: var(--red); color: white; }
+  .email-add {
+    width: 100%; padding: 7px;
+    background: transparent; color: var(--honey);
+    border: 1px dashed var(--honey); border-radius: 6px;
+    cursor: pointer; font-size: 12px; font-weight: 600;
+    transition: background 0.15s;
+    margin-top: 4px;
+  }
+  .email-add:hover { background: rgba(245,158,11,0.1); }
+
+  /* ============ MODAL ============ */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.75);
+    display: none; align-items: center; justify-content: center;
+    z-index: 100; backdrop-filter: blur(4px); padding: 12px;
+  }
+  .modal-overlay.open { display: flex; animation: fadeIn 0.2s ease-out; }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  .modal {
+    background: var(--panel); border-radius: 14px; padding: 24px;
+    width: 680px; max-width: 100%; max-height: 92vh; overflow-y: auto;
+    border: 1px solid var(--honey);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.7);
+    animation: slideUp 0.25s ease-out;
+  }
+  @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+  .modal h3 {
+    color: var(--honey-light); margin-bottom: 16px;
+    font-size: 20px; display: flex; align-items: center; gap: 10px;
+  }
+  .modal-close { margin-left: auto; background: none; border: none; color: var(--muted); font-size: 26px; cursor: pointer; line-height: 1; padding: 0; }
+  .modal-close:hover { color: var(--honey); }
+  .modal-row { display: flex; justify-content: space-between; padding: 7px 0; border-bottom: 1px solid var(--border); font-size: 13px; gap: 12px; }
+  .modal-row strong { color: var(--muted); font-weight: 600; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; flex-shrink: 0; }
+  .modal-row span { text-align: right; }
+  .timeline-item { font-size: 12px; padding: 8px 12px; background: var(--comb); border-radius: 6px; border-left: 2px solid var(--honey); margin-bottom: 5px; }
+  .modal-line {
+    display: grid; grid-template-columns: auto 1fr auto auto; gap: 8px; align-items: center;
+    padding: 10px 12px; background: var(--comb); border-radius: 8px;
+    margin-bottom: 6px; font-size: 13px;
+  }
+  .modal-line-stage-select {
+    padding: 4px 7px; font-size: 12px;
+    background: var(--panel); color: var(--text);
+    border: 1px solid var(--border); border-radius: 4px;
+  }
+
+  /* PICK INTERFACE */
+  .pick-header {
+    background: linear-gradient(135deg, rgba(192,132,252,0.18), rgba(245,158,11,0.1));
+    padding: 16px; border-radius: 10px;
+    margin-bottom: 16px; border-left: 4px solid var(--purple);
+  }
+  .pick-customer { font-size: 20px; font-weight: 800; margin-bottom: 6px; }
+  .pick-meta-row { display: flex; gap: 12px; flex-wrap: wrap; font-size: 13px; color: var(--muted); margin-bottom: 4px; }
+  .pick-progress-bar { height: 12px; background: var(--border); border-radius: 6px; overflow: hidden; margin: 12px 0 6px; }
+  .pick-progress-fill { height: 100%; background: linear-gradient(90deg, var(--purple), var(--honey)); transition: width 0.4s; border-radius: 6px; }
+  .pick-progress-text { font-size: 13px; color: var(--cream); font-weight: 700; display: flex; justify-content: space-between; }
+  .pick-group { margin-bottom: 18px; }
+  .pick-group-header {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 14px;
+    background: linear-gradient(135deg, var(--comb-light), var(--comb));
+    border-radius: 8px; margin-bottom: 8px;
+    border-left: 3px solid var(--honey);
+    font-weight: 700; font-size: 14px;
+  }
+  .pick-group-header .loc-icon { font-size: 20px; }
+  .pick-group-header .loc-name { flex: 1; text-transform: uppercase; letter-spacing: 0.5px; color: var(--honey-light); }
+  .pick-group-header .loc-count { font-size: 12px; color: var(--muted); background: var(--comb); padding: 3px 10px; border-radius: 999px; }
+  .pick-item {
+    display: grid; grid-template-columns: auto 1fr; gap: 14px; align-items: center;
+    padding: 16px 14px; background: var(--comb); border-radius: 10px;
+    margin-bottom: 6px; border: 1px solid var(--border);
+    transition: all 0.2s; cursor: pointer;
+  }
+  .pick-item:hover { border-color: var(--honey); transform: translateX(2px); }
+  .pick-item.picked { opacity: 0.6; background: rgba(16,185,129,0.1); border-color: var(--green); }
+  .pick-item.picked .pick-item-name { text-decoration: line-through; }
+  .pick-checkbox {
+    width: 34px; height: 34px;
+    border: 2px solid var(--border); border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--panel); transition: all 0.15s;
+    flex-shrink: 0; font-weight: 900; font-size: 18px;
+  }
+  .pick-item:hover .pick-checkbox { border-color: var(--honey); }
+  .pick-item.picked .pick-checkbox { background: var(--green); border-color: var(--green); color: white; }
+  .pick-item-name { font-size: 16px; font-weight: 600; }
+  .pick-item-meta { font-size: 12px; color: var(--muted); margin-top: 4px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .pick-item-qty { color: var(--honey-light); font-weight: 700; font-size: 15px; }
+  .pick-cta { position: sticky; bottom: 0; background: var(--panel); padding: 12px 0 0; margin-top: 14px; border-top: 1px solid var(--border); }
+  .fulfillment-card {
+    background: linear-gradient(135deg, rgba(45,212,191,0.15), rgba(16,185,129,0.1));
+    border: 1px solid var(--teal);
+    padding: 16px; border-radius: 10px;
+    margin-bottom: 14px;
+  }
+  .fulfillment-card-title { font-size: 17px; font-weight: 800; color: var(--teal); margin-bottom: 8px; }
+
+  /* TOAST */
+  .toast-stack {
+    position: fixed; top: 80px; right: 16px;
+    display: flex; flex-direction: column; gap: 8px;
+    z-index: 200; pointer-events: none;
+  }
+  .toast {
+    background: var(--panel); border: 1px solid var(--honey);
+    border-left: 4px solid var(--honey);
+    padding: 14px 18px; border-radius: 10px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    max-width: 360px;
+    transform: translateX(120%); transition: transform 0.3s ease-out;
+    pointer-events: auto; font-size: 13px;
+    display: flex; gap: 12px; align-items: flex-start;
+  }
+  .toast.show { transform: translateX(0); }
+  .toast.success { border-color: var(--green); border-left-color: var(--green); }
+  .toast.warn { border-color: var(--red); border-left-color: var(--red); }
+  .toast-icon { font-size: 20px; }
+  .toast-body { flex: 1; }
+  .toast-title { font-weight: 700; margin-bottom: 2px; font-size: 14px; }
+  .toast-sub { font-size: 12px; color: var(--muted); }
+
+  /* ============ CHARTS ============ */
+  .chart-card {
+    background: var(--comb);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px;
+    margin-bottom: 12px;
+  }
+  .chart-head {
+    display: flex; justify-content: space-between; align-items: baseline;
+    margin-bottom: 12px;
+  }
+  .chart-title {
+    font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px;
+    color: var(--honey-light); font-weight: 700;
+  }
+  .chart-value {
+    font-family: 'Fraunces', serif;
+    font-size: 22px; font-weight: 700;
+    color: var(--text);
+  }
+  .chart-value small { font-size: 11px; color: var(--muted); font-weight: 400; font-family: 'Inter', sans-serif; letter-spacing: 0.05em; text-transform: uppercase; margin-left: 4px; }
+  .chart-svg { width: 100%; height: auto; display: block; }
+  .chart-bar-rect { transition: opacity 0.2s; }
+  .chart-bar-rect:hover { opacity: 0.7; }
+  .chart-axis-text { font-size: 10px; fill: var(--muted); font-family: 'Inter', sans-serif; }
+  .chart-legend {
+    display: flex; flex-wrap: wrap; gap: 10px;
+    margin-top: 10px; font-size: 11px;
+  }
+  .chart-legend-item { display: inline-flex; align-items: center; gap: 5px; color: var(--muted); }
+  .chart-legend-dot { width: 8px; height: 8px; border-radius: 2px; }
+  .funnel-row {
+    display: grid; grid-template-columns: 90px 1fr 32px;
+    gap: 10px; align-items: center; margin-bottom: 6px;
+    font-size: 12px;
+  }
+  .funnel-label { color: var(--muted); font-weight: 600; }
+  .funnel-bar-wrap { background: var(--panel); border-radius: 4px; height: 18px; overflow: hidden; position: relative; }
+  .funnel-bar { height: 100%; border-radius: 4px; transition: width 0.6s cubic-bezier(.2,.8,.2,1); }
+  .funnel-count { font-weight: 800; color: var(--text); text-align: right; font-variant-numeric: tabular-nums; }
+  .spark { width: 60px; height: 18px; vertical-align: middle; margin-left: 4px; }
+
+  /* ============ MASCOT / ILLUSTRATED EMPTY ============ */
+  .empty-state {
+    text-align: center; padding: 56px 20px 40px;
+    color: var(--muted);
+  }
+  .empty-mascot {
+    width: 140px; height: 140px;
+    margin: 0 auto 14px;
+    animation: mascotFloat 4s ease-in-out infinite;
+  }
+  @keyframes mascotFloat {
+    0%,100% { transform: translateY(0) rotate(-4deg); }
+    50% { transform: translateY(-8px) rotate(4deg); }
+  }
+  .empty-title { font-family: 'Fraunces', serif; font-size: 22px; font-weight: 700; color: var(--text); margin-bottom: 6px; letter-spacing: -0.01em; }
+  .empty-sub { font-size: 14px; margin-bottom: 22px; max-width: 360px; margin-left: auto; margin-right: auto; }
+
+  /* ============ ONBOARDING ============ */
+  .welcome-overlay {
+    position: fixed; inset: 0;
+    background: radial-gradient(circle at 50% 40%, rgba(31,26,20,0.95), rgba(20,17,13,0.98));
+    display: none; align-items: center; justify-content: center;
+    z-index: 300; padding: 20px;
+    backdrop-filter: blur(8px);
+  }
+  .welcome-overlay.open { display: flex; animation: fadeIn 0.4s ease-out; }
+  .welcome-card {
+    background: linear-gradient(160deg, var(--panel) 0%, var(--comb) 100%);
+    border: 1px solid var(--honey);
+    border-radius: 18px;
+    padding: 36px 36px 28px;
+    max-width: 520px; width: 100%;
+    box-shadow: 0 30px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(245,158,11,0.15);
+    animation: welcomeIn 0.5s cubic-bezier(.2,.8,.2,1);
+    text-align: center;
+  }
+  @keyframes welcomeIn {
+    from { opacity: 0; transform: translateY(20px) scale(0.95); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+  .welcome-mascot { width: 130px; height: 130px; margin: 0 auto 14px; animation: mascotFloat 4s ease-in-out infinite; }
+  .welcome-title { font-family: 'Fraunces', serif; font-size: 32px; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 8px;
+    background: linear-gradient(135deg, var(--honey-light), var(--honey));
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .welcome-sub { font-size: 15px; color: var(--muted); margin-bottom: 24px; line-height: 1.55; }
+  .welcome-features { display: grid; gap: 12px; margin-bottom: 26px; text-align: left; }
+  .welcome-feature { display: flex; gap: 12px; align-items: flex-start; padding: 12px 14px; background: var(--comb); border-radius: 10px; border-left: 3px solid var(--honey); }
+  .welcome-feature-icon { font-size: 22px; line-height: 1; flex-shrink: 0; }
+  .welcome-feature-text strong { display: block; color: var(--text); font-weight: 700; font-size: 14px; margin-bottom: 2px; }
+  .welcome-feature-text span { font-size: 12px; color: var(--muted); }
+  .welcome-buttons { display: flex; gap: 10px; flex-wrap: wrap; }
+  .welcome-buttons .btn { flex: 1; min-width: 140px; }
+
+  /* Spotlight tour */
+  .tour-overlay {
+    position: fixed; inset: 0;
+    z-index: 250;
+    pointer-events: none;
+    display: none;
+  }
+  .tour-overlay.open { display: block; }
+  .tour-shade {
+    position: absolute; inset: 0;
+    background: rgba(0,0,0,0.65);
+    pointer-events: auto;
+    transition: clip-path 0.4s cubic-bezier(.2,.8,.2,1);
+  }
+  .tour-tooltip {
+    position: absolute;
+    background: var(--panel);
+    border: 1px solid var(--honey);
+    border-radius: 12px;
+    padding: 18px;
+    max-width: 320px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+    pointer-events: auto;
+    transition: top 0.4s, left 0.4s;
+    animation: cardIn 0.3s ease-out;
+    z-index: 251;
+  }
+  .tour-step-num {
+    display: inline-block;
+    background: var(--honey); color: var(--bg);
+    font-weight: 800; font-size: 10px;
+    padding: 3px 9px; border-radius: 999px;
+    letter-spacing: 1px; text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .tour-tooltip h4 { font-family: 'Fraunces', serif; font-size: 18px; font-weight: 700; margin-bottom: 6px; color: var(--text); }
+  .tour-tooltip p { font-size: 13px; color: var(--muted); margin-bottom: 14px; line-height: 1.5; }
+  .tour-buttons { display: flex; gap: 8px; justify-content: space-between; align-items: center; }
+  .tour-progress { display: flex; gap: 4px; }
+  .tour-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--border); }
+  .tour-dot.active { background: var(--honey); width: 18px; border-radius: 4px; }
+
+  .tooltip-host { position: relative; }
+  .tooltip-host[data-tooltip]:hover::after {
+    content: attr(data-tooltip);
+    position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%);
+    background: var(--comb); color: var(--text);
+    padding: 6px 10px; border-radius: 6px;
+    font-size: 11px; font-weight: 600;
+    white-space: nowrap; border: 1px solid var(--border);
+    pointer-events: none; z-index: 80;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+  }
+
+  /* ============ LOGIN SCREEN ============ */
+  .login-overlay {
+    position: fixed; inset: 0;
+    background: radial-gradient(circle at 50% 40%, #1f1a14 0%, #14110d 100%);
+    display: none; align-items: center; justify-content: center;
+    z-index: 400; padding: 20px;
+    backdrop-filter: blur(6px);
+    animation: fadeIn 0.4s ease-out;
+  }
+  .login-overlay.open { display: flex; }
+  .login-card {
+    background: linear-gradient(160deg, var(--panel) 0%, var(--comb) 100%);
+    border: 1px solid var(--honey);
+    border-radius: 20px;
+    padding: 36px 36px 28px;
+    max-width: 640px; width: 100%;
+    box-shadow: 0 30px 90px rgba(0,0,0,0.7), 0 0 0 1px rgba(245,158,11,0.15);
+    animation: welcomeIn 0.5s cubic-bezier(.2,.8,.2,1);
+    text-align: center;
+    max-height: 92vh; overflow-y: auto;
+  }
+  .login-mascot { width: 110px; height: 110px; margin: 0 auto 10px; animation: mascotFloat 4s ease-in-out infinite; }
+  .login-title {
+    font-family: 'Fraunces', serif; font-size: 32px; font-weight: 700; letter-spacing: -0.02em;
+    margin-bottom: 6px;
+    background: linear-gradient(135deg, var(--honey-light), var(--honey));
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .login-sub { font-size: 14px; color: var(--muted); margin-bottom: 22px; }
+  .role-tiles {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 10px; margin-bottom: 20px;
+  }
+  @media (max-width: 500px) { .role-tiles { grid-template-columns: repeat(2, 1fr); } }
+  .role-tile {
+    background: var(--comb); border: 2px solid var(--border);
+    border-radius: 12px; padding: 14px 8px;
+    cursor: pointer; transition: all 0.15s;
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+    font-size: 12px; font-weight: 700;
+    color: var(--muted);
+  }
+  .role-tile:hover { transform: translateY(-2px); border-color: var(--honey); color: var(--text); box-shadow: 0 8px 20px rgba(0,0,0,0.4); }
+  .role-tile.selected { border-color: var(--role-tint, var(--honey)); background: color-mix(in oklab, var(--role-tint, var(--honey)) 12%, var(--comb)); color: var(--text); box-shadow: 0 0 0 3px color-mix(in oklab, var(--role-tint, var(--honey)) 25%, transparent); }
+  .role-tile-icon { font-size: 26px; line-height: 1; }
+  .role-tile-label { text-transform: uppercase; letter-spacing: 0.5px; }
+  .role-tile-desc { font-size: 10px; color: var(--muted); font-weight: 500; text-transform: none; letter-spacing: 0; opacity: 0.7; }
+  .login-name-row { display: grid; grid-template-columns: 1fr auto; gap: 10px; margin-bottom: 8px; }
+  .login-name-row input {
+    padding: 12px 14px;
+    background: var(--comb); color: var(--text);
+    border: 1px solid var(--border); border-radius: 10px;
+    font-size: 14px; font-family: inherit;
+  }
+  .login-name-row input:focus { outline: none; border-color: var(--honey); box-shadow: 0 0 0 2px rgba(245,158,11,0.2); }
+  .login-name-row .btn { padding: 12px 20px; }
+  .login-name-row .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .login-hint { font-size: 11px; color: var(--muted); margin-top: 4px; }
+  .login-tabs { display: flex; gap: 4px; margin: 14px 0 8px; background: var(--comb); padding: 4px; border-radius: 10px; }
+  .login-tab {
+    flex: 1; padding: 9px 12px;
+    background: transparent; color: var(--muted);
+    border: none; border-radius: 7px;
+    cursor: pointer; font-size: 12px; font-weight: 700;
+    transition: all 0.15s;
+  }
+  .login-tab:hover { color: var(--text); }
+  .login-tab.active { background: var(--panel); color: var(--honey-light); box-shadow: 0 2px 6px rgba(0,0,0,0.3); }
+  .login-field { display: grid; gap: 5px; text-align: left; }
+  .login-field label {
+    font-size: 10px; text-transform: uppercase; letter-spacing: 0.8px;
+    color: var(--muted); font-weight: 700;
+  }
+  .login-field input {
+    padding: 11px 13px;
+    background: var(--comb); color: var(--text);
+    border: 1px solid var(--border); border-radius: 8px;
+    font-size: 14px; font-family: inherit;
+  }
+  .login-field input:focus { outline: none; border-color: var(--honey); box-shadow: 0 0 0 2px rgba(245,158,11,0.2); }
+  .login-error {
+    padding: 9px 12px; background: rgba(239,68,68,0.1);
+    color: var(--red); border: 1px solid var(--red);
+    border-radius: 8px; font-size: 12px; text-align: center;
+  }
+  /* User rows in Manage Users drawer */
+  .user-row {
+    display: grid; grid-template-columns: 1fr auto; gap: 10px;
+    align-items: center; padding: 12px 14px;
+    background: var(--comb); border-radius: 10px;
+    border-left: 3px solid var(--role-tint, var(--honey));
+    margin-bottom: 8px;
+    animation: cardIn 0.3s ease-out;
+  }
+  .user-row.inactive { opacity: 0.5; border-left-color: var(--muted); }
+  .user-row-name { font-weight: 700; font-size: 14px; }
+  .user-row-email { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .user-row-role {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;
+    padding: 3px 9px; border-radius: 999px;
+    background: color-mix(in oklab, var(--role-tint, var(--honey)) 20%, var(--panel));
+    color: var(--text); font-weight: 700; margin-top: 4px;
+  }
+  .user-row-actions { display: flex; gap: 5px; flex-direction: column; }
+  .user-row-actions .btn { padding: 5px 9px; font-size: 11px; }
+  .user-row-you { font-size: 10px; color: var(--honey-light); font-weight: 700; margin-left: 6px; }
+
+  /* ============ USER CHIP ============ */
+  .user-chip {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 6px 6px 6px 12px;
+    background: var(--comb-light); color: var(--cream);
+    border: 1px solid var(--role-tint, var(--honey));
+    border-radius: 999px;
+    font-size: 13px; font-weight: 700;
+  }
+  .user-chip-icon { font-size: 15px; }
+  .user-chip-text { font-family: 'Inter', sans-serif; }
+  .user-chip-logout {
+    background: transparent; color: var(--muted);
+    border: none; cursor: pointer;
+    width: 24px; height: 24px; border-radius: 999px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 800;
+    transition: all 0.15s;
+  }
+  .user-chip-logout:hover { background: var(--red); color: white; }
+
+  /* ============ WORKSPACE + LEFT RAIL ============ */
+  .workspace {
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    gap: 16px;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 14px 20px 0;
+    position: relative; z-index: 1;
+  }
+  .workspace-center { min-width: 0; }
+  @media (max-width: 760px) {
+    .workspace { grid-template-columns: 1fr; padding: 8px 12px 0; }
+    .rail-left { display: none; }
+    /* Inbox becomes a slide-up bottom sheet on mobile */
+    .rail-left.mobile-open {
+      display: block; position: fixed;
+      left: 0; right: 0; bottom: 0; top: auto;
+      max-height: 78vh; height: auto;
+      z-index: 97;
+      border-radius: 18px 18px 0 0;
+      border: 1px solid var(--honey); border-bottom: none;
+      box-shadow: 0 -20px 60px rgba(0,0,0,0.6);
+      animation: sheetUp 0.3s cubic-bezier(.2,.8,.2,1);
+      overflow-y: auto;
+      padding-bottom: 32px;
+    }
+  }
+  @keyframes sheetUp {
+    from { transform: translateY(45%); opacity: 0.4; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+
+  .rail {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 14px 14px 20px;
+    height: fit-content;
+    position: sticky; top: 130px;
+    max-height: calc(100vh - 150px);
+    overflow-y: auto;
+  }
+  .rail-title {
+    font-family: 'Fraunces', serif;
+    font-size: 16px; font-weight: 700;
+    color: var(--honey-light);
+    display: flex; justify-content: space-between; align-items: center;
+    padding-bottom: 10px; margin-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  .rail-count {
+    background: var(--comb); color: var(--muted);
+    font-family: 'Inter', sans-serif; font-size: 11px; font-weight: 700;
+    padding: 2px 9px; border-radius: 999px;
+    border: 1px solid var(--border);
+  }
+  .envelope-stack {
+    display: flex; flex-direction: column; gap: 10px;
+    min-height: 100px;
+  }
+
+  /* Envelope card — parchment letter with wax seal */
+  .envelope {
+    position: relative;
+    background: linear-gradient(180deg, #fbeed0 0%, #f5e2b6 100%);
+    color: #4a3f30;
+    border: 1px solid #d9c088;
+    border-radius: 6px;
+    padding: 22px 14px 12px;
+    font-family: 'Fraunces', serif;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.35), inset 0 -6px 12px rgba(0,0,0,0.05);
+    cursor: pointer;
+    transition: transform 0.25s cubic-bezier(.2,.8,.2,1), box-shadow 0.2s, filter 0.2s;
+    animation: envelopeDrop 0.55s cubic-bezier(.34,1.56,.64,1) both;
+    transform-origin: top center;
+    overflow: hidden;
+  }
+  .envelope:nth-child(odd) { transform: rotate(-1.5deg); }
+  .envelope:nth-child(even) { transform: rotate(1.2deg); }
+  .envelope:hover {
+    transform: translateY(-3px) rotate(0) scale(1.02);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+    filter: brightness(1.05);
+    z-index: 3;
+  }
+  @keyframes envelopeDrop {
+    0%   { opacity: 0; transform: translateY(-40px) rotate(-6deg) scale(0.92); }
+    70%  { opacity: 1; }
+    100% { opacity: 1; }
+  }
+  /* Envelope flap */
+  .envelope::before {
+    content: '';
+    position: absolute;
+    top: -1px; left: -1px; right: -1px; height: 16px;
+    background: linear-gradient(180deg, #eab86b 0%, #d29a44 100%);
+    clip-path: polygon(0 0, 50% 90%, 100% 0);
+    border-bottom: 1px solid rgba(0,0,0,0.15);
+  }
+  /* Wax seal */
+  .envelope-seal {
+    position: absolute; top: 4px; right: 10px;
+    width: 22px; height: 22px;
+    background: radial-gradient(circle at 35% 35%, #ef4444, #7f1d1d);
+    clip-path: polygon(50% 0, 95% 25%, 95% 75%, 50% 100%, 5% 75%, 5% 25%);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.35);
+    z-index: 2;
+  }
+  .envelope-seal::after {
+    content: 'H'; position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Fraunces', serif; font-weight: 800; font-size: 12px;
+    color: rgba(255,255,255,0.85);
+  }
+  .envelope-priority::before {
+    background: linear-gradient(180deg, #ef4444 0%, #991b1b 100%);
+  }
+  .envelope-customer {
+    font-size: 15px; font-weight: 700; line-height: 1.15;
+    color: #2a1f14;
+    margin-bottom: 4px; padding-right: 22px;
+    letter-spacing: -0.005em;
+  }
+  .envelope-meta {
+    font-family: 'Inter', sans-serif;
+    font-size: 11px; color: #6b5a3e;
+    display: flex; flex-wrap: wrap; gap: 6px; align-items: center;
+  }
+  .envelope-dept-dot { width: 8px; height: 8px; border-radius: 50%; }
+  .envelope-stage-strip {
+    margin-top: 8px; padding-top: 8px;
+    border-top: 1px dashed #cbb383;
+    font-family: 'Inter', sans-serif;
+    font-size: 10px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.7px;
+    color: #7d6a45;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .envelope-postmark {
+    font-family: 'Inter', sans-serif;
+    font-size: 9px; color: #b09163;
+    text-transform: uppercase; letter-spacing: 0.8px;
+    padding: 2px 6px; border: 1px dashed #b09163;
+    border-radius: 3px;
+  }
+  .envelope-empty {
+    text-align: center; padding: 40px 10px;
+    color: var(--muted); font-size: 12px; opacity: 0.6;
+    font-style: italic;
+  }
+  .envelope.opening {
+    animation: envelopeOpen 0.5s ease-out forwards;
+  }
+  @keyframes envelopeOpen {
+    to { transform: scale(1.5) rotate(0); opacity: 0; }
+  }
+
+  [data-theme="light"] .envelope {
+    background: linear-gradient(180deg, #fef8e2 0%, #fbeec0 100%);
+    color: #2a1f14; border-color: #c9a95a;
+  }
+
+  /* ============ ATTENTION FLASH ============ */
+  .flash-overlay {
+    position: fixed; inset: 0;
+    pointer-events: none; z-index: 89;
+    opacity: 0;
+  }
+  body.flash-new .flash-overlay {
+    opacity: 1;
+    animation: screenPulseNew 1.8s ease-in-out infinite;
+  }
+  body.flash-urgent .flash-overlay {
+    opacity: 1;
+    animation: screenPulseUrgent 0.8s ease-in-out infinite;
+  }
+  @keyframes screenPulseNew {
+    0%,100% { box-shadow: inset 0 0 0 0 rgba(245,158,11,0); }
+    50%     { box-shadow: inset 0 0 90px 18px rgba(245,158,11,0.4); }
+  }
+  @keyframes screenPulseUrgent {
+    0%,100% { box-shadow: inset 0 0 0 0 rgba(239,68,68,0); }
+    50%     { box-shadow: inset 0 0 120px 28px rgba(239,68,68,0.55); }
+  }
+  .attention-banner {
+    position: fixed; bottom: 24px; left: 50%;
+    background: linear-gradient(135deg, var(--honey), var(--honey-dark));
+    color: white; padding: 13px 24px; border-radius: 999px;
+    font-weight: 800; font-size: 14px;
+    display: flex; gap: 10px; align-items: center;
+    box-shadow: 0 10px 40px rgba(245,158,11,0.5);
+    cursor: pointer; z-index: 91;
+    border: none; font-family: inherit;
+    animation: bannerBob 1.6s ease-in-out infinite;
+  }
+  .attention-banner:hover { filter: brightness(1.1); }
+  .attention-banner.urgent {
+    background: linear-gradient(135deg, var(--red), #991b1b);
+    box-shadow: 0 10px 40px rgba(239,68,68,0.55);
+    animation-duration: 0.8s;
+  }
+  @keyframes bannerBob {
+    0%,100% { transform: translateX(-50%) translateY(0); }
+    50%     { transform: translateX(-50%) translateY(-6px); }
+  }
+  .stage-tab.attention {
+    animation: tabAttention 1.2s ease-in-out infinite;
+  }
+  @keyframes tabAttention {
+    0%,100% { box-shadow: 0 0 0 0 rgba(245,158,11,0); }
+    50%     { box-shadow: 0 0 0 4px rgba(245,158,11,0.5); }
+  }
+
+  /* ============ PENDING HERO (giant envelope) ============ */
+  .pending-hero {
+    margin: 26px auto 0; display: block;
+    background: none; border: none; cursor: pointer;
+    font-family: inherit; padding: 0;
+  }
+  .pending-hero-envelope {
+    position: relative;
+    width: 380px; max-width: 82vw; height: 240px;
+    background: linear-gradient(180deg, #fbeed0 0%, #f0d9a6 100%);
+    border: 1px solid #d9c088; border-radius: 14px;
+    overflow: hidden;
+    text-align: center;
+    animation: heroFloat 3s ease-in-out infinite, heroGlow 1.8s ease-in-out infinite;
+  }
+  .pending-hero:hover .pending-hero-envelope { filter: brightness(1.06); }
+  .pending-hero-envelope::before {
+    content: ''; position: absolute; top: -1px; left: -1px; right: -1px; height: 86px;
+    background: linear-gradient(180deg, #eab86b, #d29a44);
+    clip-path: polygon(0 0, 50% 92%, 100% 0);
+    border-bottom: 1px solid rgba(0,0,0,0.12);
+  }
+  .pending-hero-seal {
+    position: absolute; top: 52px; left: 50%; transform: translateX(-50%);
+    width: 54px; height: 54px; z-index: 2;
+    background: radial-gradient(circle at 35% 35%, #ef4444, #7f1d1d);
+    clip-path: polygon(50% 0, 95% 25%, 95% 75%, 50% 100%, 5% 75%, 5% 25%);
+    display: flex; align-items: center; justify-content: center;
+    color: rgba(255,255,255,0.9);
+    font-family: 'Fraunces', serif; font-weight: 800; font-size: 24px;
+  }
+  .pending-hero-count {
+    margin-top: 112px;
+    font-family: 'Fraunces', serif; font-size: 54px; font-weight: 800; line-height: 1;
+    color: #2a1f14;
+  }
+  .pending-hero-label {
+    font-family: 'Fraunces', serif; font-size: 17px; font-weight: 600;
+    color: #4a3f30; margin-top: 3px;
+  }
+  .pending-hero-cta {
+    margin-top: 10px;
+    font-family: 'Inter', sans-serif; font-size: 11px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 1.2px; color: #8a6f3f;
+  }
+  @keyframes heroFloat {
+    0%,100% { transform: rotate(-0.8deg) translateY(0); }
+    50%     { transform: rotate(0.8deg) translateY(-7px); }
+  }
+  @keyframes heroGlow {
+    0%,100% { box-shadow: 0 20px 60px rgba(0,0,0,0.55), 0 0 0 0 rgba(245,158,11,0); }
+    50%     { box-shadow: 0 20px 60px rgba(0,0,0,0.55), 0 0 50px 8px rgba(245,158,11,0.45); }
+  }
+
+  /* ============ DEPT ALERT MINI-WINDOWS (front end / admin) ============ */
+  .dept-alerts { margin-bottom: 12px; display: flex; flex-direction: column; gap: 6px; }
+  .dept-alert {
+    display: flex; align-items: center; gap: 8px;
+    padding: 11px 12px; border-radius: 10px;
+    font-size: 12px; font-weight: 700; cursor: pointer;
+    background: rgba(245,158,11,0.12);
+    border: 1px solid var(--honey);
+    color: var(--honey-light);
+    animation: deptAlertAmber 1.6s ease-in-out infinite;
+    transition: transform 0.15s;
+  }
+  .dept-alert:hover { transform: translateX(3px); }
+  .dept-alert .da-count {
+    margin-left: auto;
+    background: var(--honey); color: var(--bg);
+    padding: 2px 9px; border-radius: 999px;
+    font-size: 11px; font-weight: 800;
+  }
+  .dept-alert.urgent {
+    background: rgba(239,68,68,0.12); border-color: var(--red); color: #fca5a5;
+    animation: deptAlertRed 0.8s ease-in-out infinite;
+  }
+  .dept-alert.urgent .da-count { background: var(--red); color: white; }
+  @keyframes deptAlertAmber {
+    0%,100% { box-shadow: 0 0 0 0 rgba(245,158,11,0); }
+    50%     { box-shadow: 0 0 14px 2px rgba(245,158,11,0.5); }
+  }
+  @keyframes deptAlertRed {
+    0%,100% { box-shadow: 0 0 0 0 rgba(239,68,68,0); }
+    50%     { box-shadow: 0 0 16px 3px rgba(239,68,68,0.55); }
+  }
+
+  /* refined header buttons */
+  header { padding: 12px 22px; }
+  .header-btn { transition: background 0.15s, transform 0.1s, box-shadow 0.15s; }
+
+  /* refined card customer line */
+  .card-customer { font-family: 'Fraunces', serif; letter-spacing: -0.01em; }
+  .stage-header h1 { font-family: 'Fraunces', serif; letter-spacing: -0.015em; }
+  .welcome-card .btn.primary, .welcome-card .btn.ghost { padding: 12px 20px; font-size: 13px; }
+
+  /* ============ MOBILE NAV (hidden on desktop) ============ */
+  .mobile-nav { display: none; }
+
+  /* ============ MOBILE ============ */
+  @media (max-width: 760px) {
+    /* Declutter the header — everything moves to the bottom nav */
+    .date-pill, .conn, .quick-metrics, .role-selector,
+    #btnNew, #btnPending, #btnStats, #btnHistory, #btnUsers, #btnSettings { display: none !important; }
+    header { padding: 10px 14px; gap: 8px; }
+    .logo { font-size: 20px; letter-spacing: 1px; }
+    .logo-mark { width: 30px; height: 30px; }
+    .header-actions { gap: 6px; margin-left: auto; }
+    .user-chip { font-size: 12px; padding: 5px 5px 5px 10px; }
+    body { padding-bottom: 96px; }
+
+    .stage-tabs-wrap { top: 54px; padding: 8px 10px; }
+    .stage-tab { padding: 8px 13px; font-size: 11px; }
+    .stage-tab .count { padding: 2px 8px; font-size: 10px; min-width: 24px; }
+
+    .toolbar {
+      padding: 0 12px; margin-top: 10px;
+      flex-wrap: nowrap; overflow-x: auto;
+      padding-bottom: 4px;
+      -webkit-overflow-scrolling: touch;
+    }
+    .toolbar input.search { min-width: 170px; }
+    .filter-pill, .toolbar select, .clear-filters { flex-shrink: 0; }
+
+    .stage-header { margin: 12px auto 8px; padding: 0 12px; }
+    .stage-header h1 { font-size: 19px; }
+    .stage-header h1 .stage-icon { font-size: 22px; }
+    .stage-subtitle { display: none; }
+
+    .card-stream { padding: 0 12px 120px; }
+    .card { padding: 16px; border-radius: 12px; }
+    .card-customer { font-size: 17px; }
+    .card-meta-row { font-size: 13px; gap: 8px 12px; }
+    .card-actions .btn { flex: 1 1 100%; padding: 13px; font-size: 14px; }
+    .line-advance { padding: 8px 12px; }
+
+    .drawer { width: 100%; right: -100%; }
+
+    /* Modals go full-screen — pick lists become a phone app */
+    .modal-overlay { padding: 0; align-items: stretch; }
+    .modal {
+      width: 100%; max-width: 100%; height: 100%; max-height: 100%;
+      border-radius: 0; border-left: none; border-right: none;
+      padding: 18px 16px 40px;
+    }
+    .pick-item { padding: 16px 12px; }
+    .pick-checkbox { width: 38px; height: 38px; }
+    .pick-item-name { font-size: 15px; }
+
+    .pending-hero-envelope { height: 200px; }
+    .pending-hero-count { font-size: 44px; margin-top: 98px; }
+    .attention-banner { bottom: 100px; font-size: 12px; padding: 11px 18px; max-width: 92vw; }
+
+    .welcome-card, .login-card { padding: 26px 20px; }
+    .role-tiles { grid-template-columns: repeat(2, 1fr); }
+    .empty-mascot { width: 110px; height: 110px; }
+
+    /* Bottom navigation */
+    .mobile-nav {
+      display: flex; position: fixed; bottom: 0; left: 0; right: 0;
+      background: var(--panel);
+      border-top: 2px solid var(--honey);
+      z-index: 94;
+      padding: 6px 8px calc(8px + env(safe-area-inset-bottom));
+      justify-content: space-around; align-items: center;
+      box-shadow: 0 -8px 24px rgba(0,0,0,0.45);
+    }
+    .mobile-nav button {
+      background: none; border: none; color: var(--muted);
+      font-size: 20px; line-height: 1;
+      display: flex; flex-direction: column; align-items: center; gap: 3px;
+      font-family: inherit; cursor: pointer;
+      position: relative; padding: 5px 10px;
+    }
+    .mobile-nav button span {
+      font-size: 9px; text-transform: uppercase;
+      letter-spacing: 0.5px; font-weight: 700;
+    }
+    .mobile-nav .mnav-new {
+      width: 56px; height: 56px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--honey), var(--honey-dark));
+      color: white; font-size: 30px; font-weight: 800;
+      align-items: center; justify-content: center;
+      margin-top: -24px;
+      box-shadow: 0 8px 20px rgba(245,158,11,0.5);
+      border: 3px solid var(--bg);
+      padding: 0;
+    }
+    .mnav-badge {
+      position: absolute; top: -3px; right: 2px;
+      background: var(--red); color: white;
+      font-size: 9px; font-weight: 800; font-style: normal;
+      min-width: 16px; height: 16px; border-radius: 999px;
+      display: flex; align-items: center; justify-content: center;
+      padding: 0 4px;
+      box-shadow: 0 0 0 2px var(--panel);
+    }
+  }
+</style>
+</head>
+<body>
+
+<div class="login-overlay" id="loginOverlay">
+  <div class="login-card">
+    <div class="login-mascot" id="loginMascot"></div>
+    <div class="login-title">Welcome to HIVE</div>
+    <div class="login-sub" id="loginSub">Sign in with your work email.</div>
+
+    <div class="login-tabs" id="loginTabs" style="display:none">
+      <button class="login-tab active" data-tab="signin">Sign In</button>
+      <button class="login-tab" data-tab="bootstrap">First-time Admin Setup</button>
+    </div>
+
+    <form id="loginForm" autocomplete="on" style="text-align:left;display:grid;gap:12px;margin:8px 0 14px">
+      <div class="login-field" id="loginNameField" style="display:none">
+        <label>Your Name</label>
+        <input id="loginNameInput" placeholder="Ivan" autocomplete="name">
+      </div>
+      <div class="login-field">
+        <label>Email</label>
+        <input id="loginEmail" type="email" placeholder="you@coop.com" autocomplete="email" required>
+      </div>
+      <div class="login-field">
+        <label>Password</label>
+        <input id="loginPassword" type="password" placeholder="••••••••" autocomplete="current-password" required>
+      </div>
+      <div class="login-error" id="loginError" style="display:none"></div>
+      <button type="submit" class="btn primary" id="loginBtn">Sign in →</button>
+    </form>
+
+    <div class="login-hint" id="loginHint">Enter your credentials.</div>
+  </div>
+</div>
+
+<header>
+  <div class="logo"><span class="logo-mark" id="logoMark"></span> HIVE</div>
+  <div class="date-pill" id="dateLabel">—</div>
+  <div class="conn"><span class="conn-dot"></span> <span>Live</span></div>
+  <div class="header-actions">
+    <div class="user-chip" id="userChip" style="display:none">
+      <span class="user-chip-icon" id="userChipIcon"></span>
+      <span class="user-chip-text" id="userChipText"></span>
+      <button class="user-chip-logout" id="btnLogout" title="Log out">⎋</button>
+    </div>
+    <select class="role-selector" id="userRole" title="View as (debug)">
+      <optgroup label="View as">
+        <option value="">All Departments</option>
+        <option value="dept:grocery">🛒 Grocery</option>
+        <option value="dept:meat">🥩 Meat</option>
+        <option value="dept:deli">🧀 Deli</option>
+        <option value="dept:bakery">🥐 Bakery</option>
+        <option value="dept:produce">🥬 Produce</option>
+        <option value="driver">🚚 Driver</option>
+        <option value="clerk">🛍 Clerk</option>
+      </optgroup>
+    </select>
+    <button class="header-btn primary" id="btnNew">+ New Order</button>
+    <button class="header-btn" id="btnPending" title="Pending orders" style="display:none">📥 <span id="pendingLabel">Pending</span><span class="badge" id="pendingBadge">0</span></button>
+    <button class="header-btn" id="btnStats" title="Stats & departments">📊</button>
+    <button class="header-btn" id="btnHistory" title="History">📋</button>
+    <button class="header-btn" id="btnUsers" title="Manage users" style="display:none">👥</button>
+    <button class="header-btn" id="btnSettings" title="Email settings">⚙</button>
+    <button class="header-btn" id="themeToggle" title="Toggle theme">🌓</button>
+    <div class="quick-metrics">
+      <div class="qm"><div class="qm-num" id="mTotal">0</div><div class="qm-lbl">Today</div></div>
+      <div class="qm"><div class="qm-num" id="mActive">0</div><div class="qm-lbl">Active</div></div>
+      <div class="qm"><div class="qm-num" id="mAvgFulfill">—</div><div class="qm-lbl">Avg</div></div>
+    </div>
+  </div>
+</header>
+
+<div class="stage-tabs-wrap">
+  <div class="stage-tabs" id="stageTabs">
+    <button class="stage-tab received"     data-stage-tab="received">📨 Received <span class="count">0</span></button>
+    <button class="stage-tab acknowledged" data-stage-tab="acknowledged">👁 Acknowledged <span class="count">0</span></button>
+    <button class="stage-tab prepared"     data-stage-tab="prepared">📦 Prepared <span class="count">0</span></button>
+    <button class="stage-tab picking"      data-stage-tab="picking">🛒 Picking <span class="count">0</span></button>
+    <button class="stage-tab enroute"      data-stage-tab="enroute">🚚 En Route <span class="count">0</span></button>
+    <button class="stage-tab completed"    data-stage-tab="completed">✓ Completed <span class="count">0</span></button>
+  </div>
+</div>
+
+<div class="workspace">
+<aside class="rail rail-left" id="railLeft">
+  <div class="dept-alerts" id="deptAlerts" style="display:none"></div>
+  <div class="rail-title"><span id="railTitle">📥 Inbox</span> <span class="rail-count" id="railCount">0</span></div>
+  <div class="envelope-stack" id="envelopeStack"></div>
+</aside>
+<div class="workspace-center">
+<div class="toolbar">
+  <input class="search" id="searchInput" placeholder="🔍 Search by customer, item, contact, co-op #…">
+  <button class="filter-pill" data-filter="priority">🚨 Priority</button>
+  <button class="filter-pill" data-filter="pickup">🛍 Pickup</button>
+  <button class="filter-pill" data-filter="delivery">🚚 Delivery</button>
+  <select id="dateFilter">
+    <option value="all">All time</option>
+    <option value="today">Today</option>
+    <option value="week">This week</option>
+    <option value="upcoming">Needed soon</option>
+  </select>
+  <button class="clear-filters" id="clearFilters">Clear</button>
+</div>
+
+<div class="stage-header">
+  <h1>
+    <span class="stage-icon" id="stageIcon">📨</span>
+    <span id="stageTitle">Received</span>
+    <span class="stage-count" id="stageCount">0</span>
+  </h1>
+  <div class="stage-subtitle" id="stageSubtitle">Orders waiting to be acknowledged.</div>
+</div>
+
+<div class="card-stream" id="cardStream"></div>
+</div><!-- /workspace-center -->
+</div><!-- /workspace -->
+
+<!-- DRAWERS -->
+<div class="drawer-overlay" id="drawerOverlay"></div>
+
+<aside class="drawer" id="drawerNew">
+  <div class="drawer-header">
+    <div class="drawer-title">📝 New Order</div>
+    <button class="drawer-close" data-close-drawer>×</button>
+  </div>
+  <form id="orderForm" autocomplete="off">
+    <div class="form-group">
+      <label>Customer Name</label>
+      <input name="customerName" list="customerList" required>
+      <datalist id="customerList"></datalist>
+    </div>
+    <div class="form-group"><label>Contact Person</label><input name="contact"></div>
+    <div class="row-2">
+      <div class="form-group"><label>Phone</label><input name="phone" type="tel"></div>
+      <div class="form-group"><label>Co-op #</label><input name="coopNumber"></div>
+    </div>
+    <div class="form-group"><label>Order Taken By</label><input name="takenBy" required></div>
+    <div class="form-group">
+      <label>Fulfillment</label>
+      <select name="fulfillment" id="newFulfillment">
+        <option value="pickup">Pickup</option>
+        <option value="delivery">Delivery</option>
+      </select>
+    </div>
+    <div class="form-group" id="newAddressGroup" style="display:none">
+      <label>📍 Delivery Address</label>
+      <input name="address" placeholder="Street, city, postal code">
+    </div>
+    <div class="form-group">
+      <label>Needed By</label>
+      <div class="row-2">
+        <input name="neededDate" type="date" required>
+        <input name="neededTime" type="time" required>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Items <span style="color:var(--muted);text-transform:none;font-weight:400">(dept + storage)</span></label>
+      <div class="line-rows" id="lineRows"></div>
+      <button type="button" class="add-line" id="addLine">+ Add item</button>
+    </div>
+    <div class="form-group"><label>Order Notes</label><textarea name="notes" rows="2" placeholder="Delivery instructions, allergies, etc."></textarea></div>
+    <div class="checkbox-row">
+      <input type="checkbox" name="priority" id="priority">
+      <label for="priority">🚨 High priority</label>
+    </div>
+    <button type="submit" class="btn-submit">Send to Hive · 📧 Emails go out</button>
+    <p style="font-size:11px;color:var(--muted);margin-top:8px;text-align:center">Order goes to Pending. Click 📥 in the header to start it.</p>
+  </form>
+</aside>
+
+<aside class="drawer" id="drawerPending">
+  <div class="drawer-header">
+    <div class="drawer-title">📥 Pending Orders</div>
+    <button class="drawer-close" data-close-drawer>×</button>
+  </div>
+  <p style="font-size:12px;color:var(--muted);margin-bottom:14px">Orders sit here after creation. Emails have gone out. Click <strong>Start Order</strong> once departments are ready — the order then enters the workflow and the timer begins.</p>
+  <div id="pendingList"></div>
+</aside>
+
+<aside class="drawer" id="drawerStats">
+  <div class="drawer-header">
+    <div class="drawer-title">📊 Stats & Departments</div>
+    <button class="drawer-close" data-close-drawer>×</button>
+  </div>
+  <div class="section-title">Departments</div>
+  <div class="honeycomb" id="honeycomb"></div>
+  <div class="section-title">7-Day Volume</div>
+  <div id="chartWeekly"></div>
+  <div class="section-title">Stage Funnel</div>
+  <div id="chartFunnel"></div>
+  <div class="section-title">Department Load</div>
+  <div id="chartDeptLoad"></div>
+  <div class="section-title">Today's Efficiency</div>
+  <div class="eff-stats" id="effStats"></div>
+</aside>
+
+<aside class="drawer" id="drawerHistory">
+  <div class="drawer-header">
+    <div class="drawer-title">📋 Order History</div>
+    <button class="drawer-close" data-close-drawer>×</button>
+  </div>
+  <div id="historyList"></div>
+</aside>
+
+<aside class="drawer" id="drawerUsers">
+  <div class="drawer-header">
+    <div class="drawer-title">👥 Manage Users</div>
+    <button class="drawer-close" data-close-drawer>×</button>
+  </div>
+  <p style="font-size:12px;color:var(--muted);margin-bottom:14px">Create accounts for each department + front desk. Each account gets an email + password to sign in with, and a role that scopes what they see.</p>
+  <button class="btn primary" id="btnAddUser" style="width:100%;margin-bottom:12px">+ Add user</button>
+  <form id="addUserForm" style="display:none;background:var(--comb);padding:12px;border-radius:10px;margin-bottom:14px;border-left:3px solid var(--honey)">
+    <div class="form-group"><label>Name</label><input name="userName" required></div>
+    <div class="form-group"><label>Email</label><input name="userEmail" type="email" placeholder="grocery@coop.com" required></div>
+    <div class="form-group"><label>Password (min 6 chars)</label><input name="userPassword" type="password" required minlength="6"></div>
+    <div class="form-group"><label>Role</label><select name="userRole" required></select></div>
+    <div id="addUserError" style="display:none;padding:8px 10px;background:rgba(239,68,68,0.1);color:var(--red);border:1px solid var(--red);border-radius:6px;font-size:12px;margin-bottom:8px"></div>
+    <div style="display:flex;gap:8px">
+      <button type="button" class="btn ghost" id="btnAddUserCancel" style="flex:1">Cancel</button>
+      <button type="submit" class="btn primary" style="flex:2">Create user</button>
+    </div>
+  </form>
+  <div id="usersList"></div>
+</aside>
+
+<aside class="drawer" id="drawerSettings">
+  <div class="drawer-header">
+    <div class="drawer-title">⚙ Email Settings</div>
+    <button class="drawer-close" data-close-drawer>×</button>
+  </div>
+  <p style="font-size:12px;color:var(--muted);margin-bottom:14px">Recipients for automatic order emails. When an order is created, both Front Desk addresses are CC'd plus each department that has items in the order.</p>
+  <form id="emailForm">
+    <div id="emailGroupsContainer"></div>
+    <button type="submit" class="btn-submit" style="margin-top:14px">Save Recipients</button>
+  </form>
+</aside>
+
+<!-- ORDER DETAIL MODAL -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <h3 id="modalTitle">Order<button class="modal-close" id="modalClose">×</button></h3>
+    <div id="modalBody"></div>
+  </div>
+</div>
+
+<div class="welcome-overlay" id="welcomeOverlay">
+  <div class="welcome-card">
+    <div class="welcome-mascot" id="welcomeMascot"></div>
+    <div class="welcome-title">Welcome to HIVE</div>
+    <div class="welcome-sub">Co-op order management — from the moment a customer phones in, through every department, all the way to handoff.</div>
+    <div class="welcome-features">
+      <div class="welcome-feature">
+        <div class="welcome-feature-icon">📥</div>
+        <div class="welcome-feature-text"><strong>Capture orders</strong><span>Front desk enters details, emails fly to the right departments.</span></div>
+      </div>
+      <div class="welcome-feature">
+        <div class="welcome-feature-icon">📦</div>
+        <div class="welcome-feature-text"><strong>Watch the workflow</strong><span>Departments tick off items. Drivers and clerks pick from storage locations.</span></div>
+      </div>
+      <div class="welcome-feature">
+        <div class="welcome-feature-icon">📊</div>
+        <div class="welcome-feature-text"><strong>Measure the hive</strong><span>Live timers, weekly volume, and efficiency charts in the Stats drawer.</span></div>
+      </div>
+    </div>
+    <div class="welcome-buttons">
+      <button class="btn ghost" id="skipTourBtn">Skip — I'll explore</button>
+      <button class="btn primary" id="startTourBtn">Take the tour →</button>
+    </div>
+  </div>
+</div>
+
+<div class="tour-overlay" id="tourOverlay">
+  <div class="tour-shade" id="tourShade"></div>
+  <div class="tour-tooltip" id="tourTooltip">
+    <span class="tour-step-num" id="tourStepNum">Step 1 of 5</span>
+    <h4 id="tourTitle">Title</h4>
+    <p id="tourBody">Body text</p>
+    <div class="tour-buttons">
+      <div class="tour-progress" id="tourProgress"></div>
+      <div style="display:flex;gap:6px">
+        <button class="btn small ghost" id="tourPrev">← Back</button>
+        <button class="btn small primary" id="tourNext">Next →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<nav class="mobile-nav" id="mobileNav">
+  <button data-mnav="inbox" title="Inbox">📥<span>Inbox</span><b class="mnav-badge" id="mnavInboxCount" style="display:none">0</b></button>
+  <button data-mnav="stats" title="Stats">📊<span>Stats</span></button>
+  <button class="mnav-new" data-mnav="new" title="New order">＋</button>
+  <button data-mnav="pending" title="Pending">✉<span>Pending</span><b class="mnav-badge" id="mnavPendingCount" style="display:none">0</b></button>
+  <button data-mnav="history" title="History">📋<span>History</span></button>
+</nav>
+
+<div class="flash-overlay" id="flashOverlay"></div>
+<button class="attention-banner" id="attentionBanner" style="display:none">
+  <span id="attentionText"></span>
+</button>
+
+<div class="toast-stack" id="toastStack"></div>
+
+<script type="module">
+// ============ FIREBASE ============
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js';
+import {
+  getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword,
+  signOut, onAuthStateChanged, updateProfile
+} from 'https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js';
+import {
+  getFirestore, doc, setDoc, getDoc, updateDoc, deleteDoc,
+  collection, query, where, orderBy, limit, onSnapshot, getDocs,
+  serverTimestamp, writeBatch, arrayUnion
+} from 'https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js';
+
+const firebaseConfig = {
+  apiKey: "AIzaSyA0YNh3lqKKbruefTNHSUpeKln81yluJsA",
+  authDomain: "hive-955b9.firebaseapp.com",
+  projectId: "hive-955b9",
+  storageBucket: "hive-955b9.firebasestorage.app",
+  messagingSenderId: "1089030027406",
+  appId: "1:1089030027406:web:8930d741fdbfb8ea01b1df"
+};
+const fbApp = initializeApp(firebaseConfig);
+const auth = getAuth(fbApp);
+const db = getFirestore(fbApp);
+// Secondary app instance — used to create new user accounts without kicking the current admin out of their session
+const fbAppSecondary = initializeApp(firebaseConfig, 'secondary');
+const authSecondary = getAuth(fbAppSecondary);
+
+const STAGES = ['received', 'acknowledged', 'prepared', 'picking', 'enroute', 'completed'];
+const STAGE_LABELS = {
+  received: 'Received', acknowledged: 'Acknowledged', prepared: 'Prepared',
+  picking: 'Picking', enroute: 'En Route', completed: 'Completed'
+};
+const STAGE_ICONS = {
+  received: '📨', acknowledged: '👁', prepared: '📦',
+  picking: '🛒', enroute: '🚚', completed: '✓'
+};
+const STAGE_SUBTITLES = {
+  received: 'Orders started — waiting for departments to acknowledge.',
+  acknowledged: 'Departments are working on these orders.',
+  prepared: 'All items pulled — ready for driver or clerk to pick.',
+  picking: 'Driver/clerk collecting items by storage location.',
+  enroute: 'Out for delivery or ready for customer pickup.',
+  completed: 'Delivered and handed off. Done.'
+};
+const LINE_STAGES = ['received', 'acknowledged', 'prepared'];
+const DEPTS = ['grocery','meat','deli','bakery','produce'];
+const DEPT_LABELS = { grocery:'Grocery', meat:'Meat', deli:'Deli', bakery:'Bakery', produce:'Produce' };
+const DEPT_ICONS  = { grocery:'🛒', meat:'🥩', deli:'🧀', bakery:'🥐', produce:'🥬' };
+const LOCATIONS = {
+  dry:     { label: 'Dry Storage',   icon: '📦', order: 1 },
+  produce: { label: 'Produce Floor', icon: '🥬', order: 2 },
+  bakery:  { label: 'Bakery',        icon: '🥐', order: 3 },
+  deli:    { label: 'Deli Counter',  icon: '🧀', order: 4 },
+  meat:    { label: 'Meat Counter',  icon: '🥩', order: 5 },
+  cooler:  { label: 'Cooler',        icon: '❄️', order: 6 },
+  freezer: { label: 'Freezer',       icon: '🥶', order: 7 }
+};
+const LOCATION_KEYS = Object.keys(LOCATIONS).sort((a,b) => LOCATIONS[a].order - LOCATIONS[b].order);
+const DEPT_DEFAULT_LOCATION = { grocery:'dry', meat:'meat', deli:'deli', bakery:'bakery', produce:'produce' };
+
+const UNITS = [
+  { id: 'ea',    label: 'each',   plural: 'each'    },
+  { id: 'lb',    label: 'lb',     plural: 'lbs'     },
+  { id: 'oz',    label: 'oz',     plural: 'oz'      },
+  { id: 'kg',    label: 'kg',     plural: 'kg'      },
+  { id: 'g',     label: 'g',      plural: 'g'       },
+  { id: 'case',  label: 'case',   plural: 'cases'   },
+  { id: 'pkg',   label: 'pkg',    plural: 'pkgs'    },
+  { id: 'doz',   label: 'dozen',  plural: 'dozen'   },
+  { id: 'gal',   label: 'gallon', plural: 'gallons' },
+  { id: 'L',     label: 'L',      plural: 'L'       },
+  { id: 'mL',    label: 'mL',     plural: 'mL'      },
+  { id: 'bunch', label: 'bunch',  plural: 'bunches' },
+  { id: 'bag',   label: 'bag',    plural: 'bags'    },
+  { id: 'box',   label: 'box',    plural: 'boxes'   }
+];
+const UNIT_BY_ID = Object.fromEntries(UNITS.map(u => [u.id, u]));
+
+function formatUnitLabel(unitId, qty) {
+  const u = UNIT_BY_ID[unitId];
+  if (!u) return unitId || ''; // legacy free-text fallback
+  const n = parseFloat(qty);
+  return (!isNaN(n) && n === 1) ? u.label : u.plural;
+}
+
+// Produce a nicely-formatted HTML description for a line item
+// Examples:  "<b>2</b> lbs of ground beef"   /   "<b>12</b>× sourdough loaves"
+function formatLineDescription(line) {
+  const qty = String(line.qty ?? '').trim();
+  const nameHtml = escapeHtml(line.name);
+  if (!qty) return nameHtml;
+  const qtyHtml = `<strong class="line-qty-num">${escapeHtml(qty)}</strong>`;
+  const unit = line.unit;
+  if (!unit || unit === 'ea') return `${qtyHtml}× ${nameHtml}`;
+  const label = formatUnitLabel(unit, qty);
+  return `${qtyHtml} ${escapeHtml(label)} of ${nameHtml}`;
+}
+
+function splitISO(iso) {
+  if (!iso) return ['', ''];
+  const m = String(iso).match(/^(\d{4}-\d{2}-\d{2})[T ](\d{2}:\d{2})/);
+  if (m) return [m[1], m[2]];
+  const d = new Date(iso); if (isNaN(d)) return ['',''];
+  const pad = n => String(n).padStart(2,'0');
+  return [`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`, `${pad(d.getHours())}:${pad(d.getMinutes())}`];
+}
+function combineDateTime(date, time) {
+  if (!date) return '';
+  return `${date}T${time || '00:00'}`;
+}
+
+const STORAGE_KEY = 'hive:orders';
+const HISTORY_KEY = 'hive:history';
+const ROLE_KEY = 'hive:userRole';
+const CUSTOMERS_KEY = 'hive:customers';
+const THEME_KEY = 'hive:theme';
+const FILTERS_KEY = 'hive:filters';
+const SEEN_KEY = 'hive:seenNotifications';
+const STAGE_KEY = 'hive:currentStage';
+const EMAILS_KEY = 'hive:emails';
+const AUTH_KEY = 'hive:auth';
+
+// Access roles — enforced by login (not the view-as picker, which is admin-only debug)
+const ROLES = {
+  admin:    { label:'Admin',     icon:'👑', tint:'#f59e0b', canSeeAll:true,  canConfig:true,  canCreate:true },
+  frontend: { label:'Front Desk', icon:'☎',  tint:'#60a5fa', canSeeAll:true,  canConfig:false, canCreate:true },
+  grocery:  { label:'Grocery',   icon:'🛒', tint:'#86efac', dept:'grocery', canCreate:true },
+  meat:     { label:'Meat',      icon:'🥩', tint:'#fca5a5', dept:'meat',    canCreate:true },
+  deli:     { label:'Deli',      icon:'🧀', tint:'#fcd34d', dept:'deli',    canCreate:true },
+  bakery:   { label:'Bakery',    icon:'🥐', tint:'#d8b4fe', dept:'bakery',  canCreate:true },
+  produce:  { label:'Produce',   icon:'🥬', tint:'#6ee7b7', dept:'produce', canCreate:true },
+  driver:   { label:'Driver',    icon:'🚚', tint:'#2dd4bf', fulfillment:'delivery', pickupTime:true },
+  clerk:    { label:'Clerk',     icon:'🛍', tint:'#c084fc', fulfillment:'pickup',   pickupTime:true }
+};
+let currentUser = null; // { uid, email, role, name } — populated by onAuthStateChanged after Firebase sign-in
+function roleInfo() { return currentUser ? ROLES[currentUser.role] : null; }
+function isAdmin() { return currentUser?.role === 'admin'; }
+function isFrontEnd() { return currentUser?.role === 'frontend'; }
+function canSeeAll() { return !!roleInfo()?.canSeeAll; }
+function scopeDept() { return roleInfo()?.dept || ''; }
+function scopeFulfillment() { return roleInfo()?.fulfillment || ''; }
+// Picking/delivery/handoff is done by drivers, clerks, front desk, and admin.
+// Departments prep items; once prepared, their part is done (read-only from there).
+function canPick() { return isAdmin() || isFrontEnd() || !!roleInfo()?.pickupTime; }
+// Accepting/starting pending orders (and cancelling them) is Front Desk + Admin only.
+function canStartOrders() { return isAdmin() || isFrontEnd(); }
+
+const DEFAULT_EMAILS = { frontDesk:['',''], grocery:['',''], meat:['',''], deli:['',''], bakery:['',''], produce:['',''] };
+
+let orders = [];    // populated from Firestore onSnapshot after sign-in
+let history = load(HISTORY_KEY, []); // still localStorage this pass (migrates next)
+let customers = load(CUSTOMERS_KEY, {}); // still localStorage this pass
+let userRole = localStorage.getItem(ROLE_KEY) || '';
+let theme = localStorage.getItem(THEME_KEY) || 'dark';
+let filters = load(FILTERS_KEY, { priority:false, pickup:false, delivery:false, date:'all', search:'' });
+let seenNotif = new Set(load(SEEN_KEY, []));
+let currentStage = localStorage.getItem(STAGE_KEY) || 'received';
+let emails = { ...DEFAULT_EMAILS, ...load(EMAILS_KEY, {}) };
+
+function userDept() { return userRole.startsWith('dept:') ? userRole.slice(5) : ''; }
+function isDriver() { return userRole === 'driver'; }
+function isClerk() { return userRole === 'clerk'; }
+function whoAmI() {
+  if (isDriver()) return 'Driver';
+  if (isClerk())  return 'Clerk';
+  const d = userDept();
+  return d ? DEPT_LABELS[d] : 'Front Desk';
+}
+function roleDefaultStage() {
+  if (isDriver() || isClerk()) return 'prepared';
+  if (userDept()) return 'acknowledged';
+  return 'received';
+}
+
+function migrate(arr) {
+  return arr.map(o => {
+    const out = { ...o };
+    if (!out.lines) {
+      out.lines = [{
+        id: 'L' + Math.random().toString(36).slice(2,8),
+        department: o.department, name: o.notes || 'Order', qty: '', unit: '',
+        stage: LINE_STAGES.includes(o.stage) ? o.stage : 'received',
+        location: DEPT_DEFAULT_LOCATION[o.department] || 'dry', picked: false
+      }];
+      delete out.stage; delete out.department;
+    }
+    out.lines = out.lines.map(l => ({
+      location: DEPT_DEFAULT_LOCATION[l.department] || 'dry',
+      picked: false, ...l,
+      stage: LINE_STAGES.includes(l.stage) ? l.stage : 'prepared'
+    }));
+    if (!out.fulfillmentStage) out.fulfillmentStage = null;
+    if (!out.timestamps) {
+      out.timestamps = {
+        received: o.orderDate || new Date().toISOString(),
+        acknowledged: null, prepared: null, picking: null, enroute: null, completed: null
+      };
+    }
+    // v5: status field. Existing orders default to active so they don't disappear.
+    if (!out.status) out.status = 'active';
+    if (!out.emailedTo) out.emailedTo = [];
+    return out;
+  });
+}
+
+const channel = ('BroadcastChannel' in window) ? new BroadcastChannel('hive') : null;
+if (channel) {
+  channel.onmessage = (ev) => {
+    if (ev.data.type === 'sync') {
+      orders = migrate(load(STORAGE_KEY, []));
+      history = load(HISTORY_KEY, []);
+      customers = load(CUSTOMERS_KEY, {});
+      emails = { ...DEFAULT_EMAILS, ...load(EMAILS_KEY, {}) };
+      render();
+      if (ev.data.flashId) flashCard(ev.data.flashId);
+      if (ev.data.pingDept) pingDept(ev.data.pingDept);
+    }
+  };
+}
+window.addEventListener('storage', (e) => {
+  if ([STORAGE_KEY, HISTORY_KEY, CUSTOMERS_KEY, EMAILS_KEY].includes(e.key)) {
+    orders = migrate(load(STORAGE_KEY, []));
+    history = load(HISTORY_KEY, []);
+    customers = load(CUSTOMERS_KEY, {});
+    emails = { ...DEFAULT_EMAILS, ...load(EMAILS_KEY, {}) };
+    render();
+  }
+});
+
+function load(k, def) { try { return JSON.parse(localStorage.getItem(k)) ?? def; } catch { return def; } }
+
+// Track which orders were locally deleted so save() knows to remove them from Firestore
+const _deletedOrderIds = new Set();
+
+function save() {
+  // Local backup — keeps things responsive offline and lets non-orders (history/customers/emails) persist
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(orders));
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(history.slice(0, 150)));
+    localStorage.setItem(CUSTOMERS_KEY, JSON.stringify(customers));
+    localStorage.setItem(SEEN_KEY, JSON.stringify([...seenNotif]));
+    localStorage.setItem(EMAILS_KEY, JSON.stringify(emails));
+  } catch {}
+  // Cloud sync for orders — fire-and-forget, onSnapshot will confirm
+  if (!currentUser || !db) return;
+  (async () => {
+    try {
+      const batch = writeBatch(db);
+      for (const o of orders) batch.set(doc(db, 'orders', o.id), o);
+      for (const id of _deletedOrderIds) batch.delete(doc(db, 'orders', id));
+      _deletedOrderIds.clear();
+      await batch.commit();
+    } catch (e) { console.warn('orders cloud save failed', e); }
+  })();
+}
+
+// Firestore live subscription for orders — replaces BroadcastChannel for cross-device sync
+let _unsubOrders = null;
+function subscribeOrders() {
+  if (_unsubOrders) return;
+  _unsubOrders = onSnapshot(collection(db, 'orders'), (snap) => {
+    // Skip our own writes-in-flight; they'll re-fire when acknowledged by the server
+    if (snap.metadata.hasPendingWrites) return;
+    orders = migrate(snap.docs.map(d => d.data()));
+    render();
+  }, (err) => console.warn('orders subscribe error', err));
+}
+function unsubscribeOrders() {
+  if (_unsubOrders) { _unsubOrders(); _unsubOrders = null; }
+  orders = [];
+}
+
+function broadcast(extra={}) { /* replaced by Firestore live sync */ }
+function uid(p='') { return p + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
+
+function fmtDate(iso) {
+  if (!iso) return '—';
+  return new Date(iso).toLocaleString([], { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
+}
+function fmtDateLong(iso) { if (!iso) return '—'; return new Date(iso).toLocaleString([], { weekday:'short', month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' }); }
+function fmtDuration(ms) {
+  if (ms == null || isNaN(ms)) return '—';
+  const s = Math.round(ms / 1000);
+  if (s < 60) return s + 's';
+  const m = Math.round(s / 60);
+  if (m < 60) return m + 'm';
+  const h = Math.floor(m / 60);
+  return `${h}h ${m % 60}m`;
+}
+function isToday(iso) { if (!iso) return false; return new Date(iso).toDateString() === new Date().toDateString(); }
+function isThisWeek(iso) { if (!iso) return false; return Math.abs(new Date(iso) - new Date()) < 7 * 86400000; }
+function isUpcoming(iso) { if (!iso) return false; const d=new Date(iso); const n=new Date(); return d > n && (d - n) < 2 * 86400000; }
+function escapeHtml(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c])); }
+
+function addHistoryEntry(orderId, action) {
+  history.unshift({ ts: Date.now(), orderId, action, by: whoAmI() });
+  history = history.slice(0, 150);
+}
+function rememberCustomer(o) {
+  const key = o.customerName.trim().toLowerCase(); if (!key) return;
+  customers[key] = { customerName: o.customerName, contact: o.contact, phone: o.phone, coopNumber: o.coopNumber, lastSeen: Date.now() };
+}
+
+function recipientsFor(order) {
+  const depts = [...new Set(order.lines.map(l => l.department))];
+  const out = [];
+  // Front desk always
+  (emails.frontDesk || []).filter(Boolean).forEach(e => out.push({ to: e, dept: 'Front Desk' }));
+  // Each department in the order
+  for (const d of depts) {
+    (emails[d] || []).filter(Boolean).forEach(e => out.push({ to: e, dept: DEPT_LABELS[d] }));
+  }
+  return out;
+}
+
+function sendOrderEmails(order) {
+  const list = recipientsFor(order);
+  if (list.length === 0) return [];
+  // We can't actually send email from a static page. Two things happen:
+  //   1) The recipients are logged on the order and to history (counts as "sent")
+  //   2) A toast confirms with the recipient summary
+  order.emailedTo = list.map(r => ({ to: r.to, dept: r.dept, ts: Date.now() }));
+  const depts = [...new Set(list.map(r => r.dept))];
+  order.history.push({ ts: Date.now(), action: `📧 Emailed ${list.length} recipient(s): ${depts.join(', ')}`, by: 'system' });
+  addHistoryEntry(order.id, `📧 Sent to ${list.length} recipient(s): ${depts.join(', ')}`);
+  return list;
+}
+
+function buildMailtoLink(order) {
+  const list = recipientsFor(order);
+  if (list.length === 0) return null;
+  const tos = [...new Set(list.map(r => r.to))].join(',');
+  const subject = `New HIVE order: ${order.customerName}`;
+  const lines = order.lines.map(l => `  • ${l.qty || ''}${l.unit || ''} ${l.name} (${DEPT_LABELS[l.department]}, ${LOCATIONS[l.location].label})`).join('\n');
+  const body = [
+    `New order for ${order.customerName}`,
+    order.contact ? `Contact: ${order.contact}` : '',
+    order.phone ? `Phone: ${order.phone}` : '',
+    order.coopNumber ? `Co-op #: ${order.coopNumber}` : '',
+    `Needed by: ${fmtDateLong(order.neededDate)}`,
+    `Fulfillment: ${order.fulfillment === 'delivery' ? 'Delivery' : 'Pickup'}`,
+    order.priority ? 'PRIORITY' : '',
+    '',
+    'Items:',
+    lines,
+    '',
+    order.notes ? `Notes: ${order.notes}` : '',
+    '',
+    `— HIVE`
+  ].filter(Boolean).join('\n');
+  return `mailto:${tos}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+}
+
+function allLinesPrepared(o) { return o.lines.every(l => l.stage === 'prepared'); }
+function allLinesAcked(o)    { return o.lines.every(l => ['acknowledged','prepared'].includes(l.stage)); }
+function allItemsPicked(o)   { return o.lines.every(l => l.picked); }
+
+function orderDisplayStage(o, deptFilter) {
+  if (o.fulfillmentStage === 'completed') return 'completed';
+  if (o.fulfillmentStage === 'enroute')   return 'enroute';
+  if (o.fulfillmentStage === 'picking')   return 'picking';
+  const lines = deptFilter ? o.lines.filter(l => l.department === deptFilter) : o.lines;
+  if (!lines.length) return null;
+  let minIdx = LINE_STAGES.length;
+  for (const l of lines) {
+    const idx = LINE_STAGES.indexOf(l.stage);
+    if (idx < minIdx) minIdx = idx;
+  }
+  return LINE_STAGES[minIdx];
+}
+function visibleLinesOf(o, deptFilter) { return deptFilter ? o.lines.filter(l => l.department === deptFilter) : o.lines; }
+function progressPctOrder(o) {
+  let s = 0;
+  if (o.fulfillmentStage === 'completed') s = 6;
+  else if (o.fulfillmentStage === 'enroute') s = 5;
+  else if (o.fulfillmentStage === 'picking') s = 4;
+  else s = o.lines.reduce((a,l) => a + LINE_STAGES.indexOf(l.stage) + 1, 0) / o.lines.length;
+  return (s / 6) * 100;
+}
+function maybeAdvanceFulfillment(o) {
+  if (allLinesPrepared(o) && !o.timestamps.prepared) {
+    o.timestamps.prepared = new Date().toISOString();
+    notify(o, 'ready-to-pick');
+  }
+  if (allLinesAcked(o) && !o.timestamps.acknowledged) {
+    o.timestamps.acknowledged = new Date().toISOString();
+  }
+}
+function notify(o, kind) {
+  const key = o.id + ':' + kind;
+  if (seenNotif.has(key)) return;
+  seenNotif.add(key); save();
+  if (kind === 'ready-to-pick') {
+    const role = o.fulfillment === 'delivery' ? 'Driver' : 'Clerk';
+    toast({ icon:'🛒', title:`${o.customerName} — ready to pick`, sub:`${role}: ${o.lines.length} item(s) prepared`, type:'success' });
+  } else if (kind === 'picked') {
+    if (o.fulfillment === 'delivery') toast({ icon:'🚚', title:`${o.customerName} — start delivery`, sub:'All items picked.', type:'success' });
+    else toast({ icon:'🛍', title:`${o.customerName} — ready for customer`, sub:'All items picked.', type:'success' });
+  } else if (kind === 'completed') {
+    const total = fmtDuration(new Date(o.timestamps.completed) - new Date(o.timestamps.received));
+    toast({ icon:'✓', title:`${o.customerName} — completed`, sub:`Total time: ${total}`, type:'success' });
+  }
+}
+
+function createOrder(data, lineData) {
+  const lines = lineData.filter(l => l.name && l.name.trim()).map(l => ({
+    id: uid('L'), department: l.department, name: l.name.trim(), qty: l.qty || '', unit: l.unit || '',
+    location: l.location || DEPT_DEFAULT_LOCATION[l.department] || 'dry',
+    stage: 'received', picked: false
+  }));
+  if (lines.length === 0) { alert('Please add at least one item.'); return false; }
+  const now = new Date().toISOString();
+  const order = {
+    id: uid('O'),
+    customerName: data.customerName, contact: data.contact || '', phone: data.phone || '',
+    coopNumber: data.coopNumber || '', address: data.address || '',
+    takenBy: data.takenBy, fulfillment: data.fulfillment,
+    orderDate: now, neededDate: data.neededDate,
+    notes: data.notes || '', priority: !!data.priority, lines,
+    fulfillmentStage: null,
+    // v5: PENDING by default — does not appear on the board until Started
+    status: 'pending',
+    emailedTo: [],
+    timestamps: { received: null, acknowledged: null, prepared: null, picking: null, enroute: null, completed: null },
+    history: [{ ts: Date.now(), action: `Order created with ${lines.length} item(s)`, by: data.takenBy }]
+  };
+  orders.unshift(order);
+  rememberCustomer(order);
+  const depts = [...new Set(lines.map(l => l.department))];
+  addHistoryEntry(order.id, `📥 Pending: new order from ${order.customerName} (${depts.map(d=>DEPT_LABELS[d]).join(', ')})`);
+
+  // Auto-send emails
+  const recipients = sendOrderEmails(order);
+  save(); render(); broadcast();
+
+  if (recipients.length === 0) {
+    toast({
+      icon: '⚠',
+      title: 'Order saved — but no email recipients configured',
+      sub: 'Open ⚙ Settings to add department + front desk emails.',
+      type: 'warn',
+      duration: 7000
+    });
+  } else {
+    const summary = [...new Set(recipients.map(r => r.dept))].join(', ');
+    toast({
+      icon: '📧',
+      title: `Order created · ${recipients.length} email(s) queued`,
+      sub: `To: ${summary}. Open 📥 Pending to start the order.`,
+      type: 'success',
+      duration: 7000
+    });
+  }
+  return true;
+}
+
+function startOrder(id) {
+  if (!canStartOrders()) { toast({ icon:'🔒', title:'Only Front Desk or Admin can start orders', sub:'Pending orders are dispatched by the front desk.', type:'warn' }); return; }
+  const o = orders.find(x => x.id === id); if (!o) return;
+  if (o.status !== 'pending') return;
+  o.status = 'active';
+  o.timestamps.received = new Date().toISOString();
+  o.history.push({ ts: Date.now(), action: 'Order started — entered workflow', by: whoAmI() });
+  addHistoryEntry(o.id, `▶ Started ${o.customerName}`);
+  const depts = [...new Set(o.lines.map(l => l.department))];
+  save();
+  currentStage = 'received'; localStorage.setItem(STAGE_KEY, currentStage);
+  render();
+  flashCard(o.id);
+  depts.forEach(d => pingDept(d));
+  pulseTab('received');
+  broadcast({ flashId: o.id, pingDept: depts[0] });
+  closeDrawers();
+  toast({ icon: '▶', title: `${o.customerName} started`, sub: 'Timer running. Departments can now acknowledge.', type: 'success' });
+}
+
+function cancelPending(id) {
+  if (!canStartOrders()) { toast({ icon:'🔒', title:'Only Front Desk or Admin can cancel pending orders', type:'warn' }); return; }
+  const o = orders.find(x => x.id === id); if (!o) return;
+  if (o.status !== 'pending') return;
+  if (!confirm(`Cancel pending order for ${o.customerName}?`)) return;
+  orders = orders.filter(x => x.id !== id);
+  addHistoryEntry(id, `Cancelled pending ${o.customerName}`);
+  save(); render(); broadcast();
+}
+
+function advanceLine(orderId, lineId) {
+  const o = orders.find(x => x.id === orderId); if (!o) return;
+  const l = o.lines.find(x => x.id === lineId); if (!l) return;
+  const idx = LINE_STAGES.indexOf(l.stage);
+  if (idx >= LINE_STAGES.length - 1) return;
+  l.stage = LINE_STAGES[idx + 1];
+  o.history.push({ ts: Date.now(), action: `${DEPT_LABELS[l.department]}: "${l.name}" → ${STAGE_LABELS[l.stage]}`, by: whoAmI() });
+  addHistoryEntry(o.id, `${o.customerName} · "${l.name}" → ${STAGE_LABELS[l.stage]}`);
+  maybeAdvanceFulfillment(o);
+  save(); render(); flashCard(o.id); pingDept(l.department);
+  broadcast({ flashId: o.id, pingDept: l.department });
+}
+function regressLine(orderId, lineId) {
+  const o = orders.find(x => x.id === orderId); if (!o) return;
+  const l = o.lines.find(x => x.id === lineId); if (!l) return;
+  const idx = LINE_STAGES.indexOf(l.stage);
+  if (idx <= 0) return;
+  l.stage = LINE_STAGES[idx - 1];
+  o.history.push({ ts: Date.now(), action: `"${l.name}" reverted to ${STAGE_LABELS[l.stage]}`, by: whoAmI() });
+  addHistoryEntry(o.id, `${o.customerName} · "${l.name}" reverted to ${STAGE_LABELS[l.stage]}`);
+  save(); render(); broadcast({ pingDept: l.department });
+}
+function setLineStage(orderId, lineId, stage) {
+  const o = orders.find(x => x.id === orderId); if (!o) return;
+  const l = o.lines.find(x => x.id === lineId); if (!l) return;
+  if (l.stage === stage) return;
+  l.stage = stage;
+  o.history.push({ ts: Date.now(), action: `"${l.name}" set to ${STAGE_LABELS[stage]}`, by: whoAmI() });
+  addHistoryEntry(o.id, `${o.customerName} · "${l.name}" → ${STAGE_LABELS[stage]}`);
+  maybeAdvanceFulfillment(o);
+  save(); render(); broadcast({ pingDept: l.department });
+}
+function startPicking(orderId) {
+  const o = orders.find(x => x.id === orderId); if (!o) return;
+  if (!canPick()) { toast({ icon:'🔒', title:'Picking is handled by the driver or clerk', sub:'Your part is done — you can watch the progress from here.', type:'warn' }); return; }
+  if (!allLinesPrepared(o)) { toast({ icon:'⚠', title:'Not yet ready', sub:'All items must be prepared first.', type:'warn' }); return; }
+  o.fulfillmentStage = 'picking';
+  o.timestamps.picking = new Date().toISOString();
+  o.history.push({ ts: Date.now(), action: 'Picking started', by: whoAmI() });
+  addHistoryEntry(o.id, `${o.customerName}: picking started`);
+  save();
+  currentStage = 'picking'; localStorage.setItem(STAGE_KEY, currentStage);
+  render(); broadcast();
+  openPickList(o.id);
+}
+function togglePick(orderId, lineId) {
+  const o = orders.find(x => x.id === orderId); if (!o) return;
+  const l = o.lines.find(x => x.id === lineId); if (!l) return;
+  l.picked = !l.picked;
+  o.history.push({ ts: Date.now(), action: `${l.picked ? 'Picked' : 'Un-picked'}: "${l.name}" from ${LOCATIONS[l.location].label}`, by: whoAmI() });
+  if (l.picked && allItemsPicked(o) && !o.timestamps.pickingDone) {
+    o.timestamps.pickingDone = new Date().toISOString();
+    notify(o, 'picked');
+  }
+  save(); renderModalPick(o); render(); broadcast();
+}
+function completePickAndStart(orderId) {
+  const o = orders.find(x => x.id === orderId); if (!o) return;
+  if (!canPick()) { toast({ icon:'🔒', title:'Picking is handled by the driver or clerk', type:'warn' }); return; }
+  if (!allItemsPicked(o)) { toast({ icon:'⚠', title:'Not yet', sub:'Some items still to pick.', type:'warn' }); return; }
+  o.fulfillmentStage = 'enroute';
+  o.timestamps.enroute = new Date().toISOString();
+  const label = o.fulfillment === 'delivery' ? 'Delivery started' : 'Ready for customer pickup';
+  o.history.push({ ts: Date.now(), action: label, by: whoAmI() });
+  addHistoryEntry(o.id, `${o.customerName}: ${label}`);
+  save();
+  currentStage = 'enroute'; localStorage.setItem(STAGE_KEY, currentStage);
+  render(); broadcast();
+  openOrder(o.id);
+}
+function completeOrder(orderId) {
+  const o = orders.find(x => x.id === orderId); if (!o) return;
+  if (!canPick()) { toast({ icon:'🔒', title:'Handoff is done by the driver or clerk', type:'warn' }); return; }
+  o.fulfillmentStage = 'completed';
+  o.timestamps.completed = new Date().toISOString();
+  const label = o.fulfillment === 'delivery' ? 'Delivered' : 'Picked up by customer';
+  o.history.push({ ts: Date.now(), action: label, by: whoAmI() });
+  addHistoryEntry(o.id, `${o.customerName}: ${label}`);
+  notify(o, 'completed');
+  save();
+  currentStage = 'completed'; localStorage.setItem(STAGE_KEY, currentStage);
+  render(); broadcast();
+  closeModal();
+}
+function setOrderStageByDrop(orderId, targetStage) {
+  const o = orders.find(x => x.id === orderId); if (!o) return;
+  if (o.status === 'pending') return; // pending orders can't be dragged
+  if (targetStage === 'picking') { startPicking(o.id); return; }
+  if (targetStage === 'enroute') {
+    if (o.fulfillmentStage !== 'picking' && !o.fulfillmentStage) startPicking(o.id);
+    o.lines.forEach(l => l.picked = true);
+    if (!o.timestamps.pickingDone) o.timestamps.pickingDone = new Date().toISOString();
+    completePickAndStart(o.id); return;
+  }
+  if (targetStage === 'completed') { completeOrder(o.id); return; }
+  if (LINE_STAGES.includes(targetStage)) {
+    const lines = visibleLinesOf(o, userDept());
+    let changed = 0; const touched = new Set();
+    for (const l of lines) {
+      if (l.stage !== targetStage) { l.stage = targetStage; changed++; touched.add(l.department); }
+    }
+    if (!changed) return;
+    o.history.push({ ts: Date.now(), action: `${changed} item(s) → ${STAGE_LABELS[targetStage]}`, by: whoAmI() });
+    addHistoryEntry(o.id, `${o.customerName}: ${changed} item(s) → ${STAGE_LABELS[targetStage]}`);
+    maybeAdvanceFulfillment(o);
+    save(); render(); flashCard(o.id); touched.forEach(d => pingDept(d));
+    broadcast({ flashId: o.id });
+  }
+}
+function togglePriority(id) {
+  const o = orders.find(x => x.id === id); if (!o) return;
+  o.priority = !o.priority;
+  o.history.push({ ts: Date.now(), action: o.priority ? 'Marked priority' : 'Cleared priority', by: whoAmI() });
+  addHistoryEntry(o.id, `${o.customerName} priority ${o.priority ? 'set' : 'cleared'}`);
+  save(); render(); broadcast();
+  if (o.status !== 'pending') openOrder(o.id);
+}
+function deleteOrder(id) {
+  const o = orders.find(x => x.id === id); if (!o) return;
+  if (!confirm(`Delete order for ${o.customerName}?`)) return;
+  orders = orders.filter(x => x.id !== id);
+  _deletedOrderIds.add(id);
+  addHistoryEntry(id, `Deleted ${o.customerName}`);
+  save(); render(); broadcast(); closeModal();
+}
+function editOrder(id, updates, newLines) {
+  const o = orders.find(x => x.id === id); if (!o) return;
+  Object.assign(o, updates);
+  if (newLines) {
+    o.lines = newLines.map(nl => {
+      if (nl.id) { const ex = o.lines.find(l => l.id === nl.id); if (ex) return { ...ex, ...nl }; }
+      return { id: uid('L'), stage: 'received', picked: false, ...nl };
+    });
+  }
+  rememberCustomer(o);
+  o.history.push({ ts: Date.now(), action: 'Order edited', by: whoAmI() });
+  addHistoryEntry(o.id, `Edited ${o.customerName}`);
+  save(); render(); broadcast(); openOrder(o.id);
+}
+
+function flashCard(id) {
+  requestAnimationFrame(() => {
+    document.querySelectorAll(`[data-card="${id}"]`).forEach(el => {
+      el.classList.remove('flash'); void el.offsetWidth; el.classList.add('flash');
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+  });
+}
+function pingDept(d) {
+  requestAnimationFrame(() => {
+    const el = document.querySelector(`.hex-wrap[data-dept="${d}"]`);
+    if (el) { el.classList.remove('ping'); void el.offsetWidth; el.classList.add('ping'); }
+  });
+}
+function pulseTab(stage) {
+  requestAnimationFrame(() => {
+    const el = document.querySelector(`.stage-tab[data-stage-tab="${stage}"]`);
+    if (el) { el.classList.remove('pulse'); void el.offsetWidth; el.classList.add('pulse'); }
+  });
+}
+function toast({ icon, title, sub, type='info', duration=5000 }) {
+  const stack = document.getElementById('toastStack');
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.innerHTML = `<span class="toast-icon">${icon || 'ℹ'}</span><div class="toast-body"><div class="toast-title">${escapeHtml(title)}</div>${sub ? `<div class="toast-sub">${escapeHtml(sub)}</div>` : ''}</div>`;
+  el.onclick = dismiss;
+  stack.appendChild(el);
+  requestAnimationFrame(() => el.classList.add('show'));
+  const t = setTimeout(dismiss, duration);
+  function dismiss() { clearTimeout(t); el.classList.remove('show'); setTimeout(() => el.remove(), 300); }
+}
+
+function passesFilters(order) {
+  if (order.status === 'pending') return false; // hide pending from the board
+  // Role-based scoping — enforced BEFORE the view-as picker & UI filters
+  const scopeD = scopeDept();
+  const scopeF = scopeFulfillment();
+  if (scopeD && !order.lines.some(l => l.department === scopeD)) return false;
+  if (scopeF && order.fulfillment !== scopeF) return false;
+  // For pickers, only orders that reached prepared+ are relevant
+  if (roleInfo()?.pickupTime && !order.timestamps.prepared && !order.fulfillmentStage) return false;
+  // UI filters
+  if (filters.priority && !order.priority) return false;
+  if (filters.pickup && order.fulfillment !== 'pickup') return false;
+  if (filters.delivery && order.fulfillment !== 'delivery') return false;
+  if (filters.date === 'today' && !isToday(order.orderDate)) return false;
+  if (filters.date === 'week' && !isThisWeek(order.orderDate)) return false;
+  if (filters.date === 'upcoming' && !isUpcoming(order.neededDate)) return false;
+  if (filters.search) {
+    const s = filters.search.toLowerCase();
+    const hay = [order.customerName, order.contact, order.phone, order.coopNumber, order.takenBy, order.notes,
+      ...order.lines.map(l => `${l.name} ${l.qty} ${l.unit} ${l.department} ${l.location}`)
+    ].join(' ').toLowerCase();
+    if (!hay.includes(s)) return false;
+  }
+  // Admin/FrontEnd view-as debug (existing selector)
+  if (userDept() && !order.lines.some(l => l.department === userDept())) return false;
+  if (isDriver()) { if (order.fulfillment !== 'delivery') return false; }
+  if (isClerk())  { if (order.fulfillment !== 'pickup') return false; }
+  return true;
+}
+
+function renderCard(o) {
+  const card = document.createElement('div');
+  card.className = 'card' + (o.priority ? ' priority-high' : '');
+  card.dataset.card = o.id;
+  card.draggable = true;
+  const linesToShow = visibleLinesOf(o, userDept());
+  const depts = [...new Set(linesToShow.map(l => l.department))];
+  const deptPills = depts.map(d => `<span class="card-dept dept-${d}">${DEPT_ICONS[d]} ${DEPT_LABELS[d]}</span>`).join('');
+  const isPicking = o.fulfillmentStage === 'picking';
+  const isEnRoute = o.fulfillmentStage === 'enroute';
+  const isCompleted = o.fulfillmentStage === 'completed';
+
+  const stageStart = isCompleted ? o.timestamps.completed
+                   : isEnRoute ? o.timestamps.enroute
+                   : isPicking ? o.timestamps.picking
+                   : (o.timestamps.prepared || o.timestamps.received);
+  const elapsed = stageStart ? Date.now() - new Date(stageStart) : 0;
+  const urgent = !isCompleted && elapsed > 30 * 60 * 1000;
+  const timeChip = stageStart ? `<span class="card-time-chip${urgent?' urgent':''}">⏱ ${fmtDuration(elapsed)} in stage</span>` : '';
+
+  let pickInfo = '';
+  if (isPicking) {
+    const picked = o.lines.filter(l => l.picked).length;
+    pickInfo = `<div style="margin:8px 0 12px;font-size:13px;color:var(--purple);font-weight:700">🛒 ${picked} / ${o.lines.length} items picked</div>`;
+  }
+
+  const linesHtml = o.lines.map(l => {
+    const dimmed = userDept() && l.department !== userDept() ? ' dimmed' : '';
+    const pickedClass = (isPicking || isEnRoute || isCompleted) && l.picked ? ' picked' : '';
+    const stage = isCompleted ? 'completed' : (isEnRoute ? 'enroute' : (isPicking ? (l.picked ? 'completed' : 'picking') : l.stage));
+    const showAdvance = !isPicking && !isEnRoute && !isCompleted && l.stage !== 'prepared';
+    return `<div class="card-line${dimmed}${pickedClass}">
+      <span class="line-stage-dot stage-dot-${stage}" title="${STAGE_LABELS[stage] || ''}"></span>
+      <div class="line-body">
+        <div class="line-text">${formatLineDescription(l)}</div>
+        <div class="line-meta">
+          <span class="card-dept dept-${l.department}">${DEPT_ICONS[l.department]} ${DEPT_LABELS[l.department]}</span>
+          <span class="line-loc">${LOCATIONS[l.location].icon} ${LOCATIONS[l.location].label}</span>
+        </div>
+      </div>
+      ${showAdvance ? `<button class="line-advance" data-act="line-advance" data-order="${o.id}" data-line="${l.id}">Advance →</button>` : ''}
+    </div>`;
+  }).join('');
+
+  const statusChip = (txt, color) => `<div style="flex:1;min-width:160px;padding:11px 18px;background:var(--comb);border-radius:8px;font-size:13px;color:${color};font-weight:700;text-align:center">${txt}</div>`;
+  let primaryAction = '';
+  if (isCompleted) {
+    const total = fmtDuration(new Date(o.timestamps.completed) - new Date(o.timestamps.received));
+    primaryAction = statusChip(`✓ Completed in ${total}`, 'var(--green)');
+  } else if (isEnRoute) {
+    if (canPick()) {
+      const label = o.fulfillment === 'delivery' ? '✓ Mark Delivered' : '✓ Mark Picked Up';
+      primaryAction = `<button class="btn success" data-act="complete" data-order="${o.id}">${label}</button>`;
+    } else {
+      primaryAction = statusChip(o.fulfillment === 'delivery' ? '🚚 Out for delivery' : '🛍 Ready for customer', 'var(--teal)');
+    }
+  } else if (isPicking) {
+    const picked = o.lines.filter(l => l.picked).length;
+    if (canPick()) {
+      const allDone = picked === o.lines.length;
+      const label = allDone ? (o.fulfillment === 'delivery' ? '🚚 Start Delivery' : '🛍 Ready for Customer') : `🛒 Open Pick List (${picked}/${o.lines.length})`;
+      primaryAction = `<button class="btn ${allDone ? 'teal' : 'purple'}" data-act="${allDone ? 'complete-pick' : 'open-pick'}" data-order="${o.id}">${label}</button>`;
+    } else {
+      primaryAction = statusChip(`🛒 Being picked (${picked}/${o.lines.length})`, 'var(--purple)');
+    }
+  } else if (allLinesPrepared(o)) {
+    primaryAction = canPick()
+      ? `<button class="btn purple" data-act="start-picking" data-order="${o.id}">🛒 Start Picking</button>`
+      : statusChip('📦 Prepared — waiting for pick', 'var(--honey-light)');
+  } else {
+    primaryAction = `<button class="btn primary" data-act="advance-all" data-order="${o.id}">Advance All →</button>`;
+  }
+
+  card.innerHTML = `
+    <div class="card-top">
+      <div class="card-customer">${escapeHtml(o.customerName)}</div>
+      ${timeChip}
+    </div>
+    <div class="card-meta-row">
+      ${o.contact ? `<span>👤 <strong>${escapeHtml(o.contact)}</strong></span>` : ''}
+      ${o.phone ? `<span>📞 ${escapeHtml(o.phone)}</span>` : ''}
+      ${o.coopNumber ? `<span>🏷 #${escapeHtml(o.coopNumber)}</span>` : ''}
+      <span class="card-fulfill">${o.fulfillment === 'delivery' ? '🚚 Delivery' : '🛍 Pickup'}</span>
+      <span class="card-needed">📅 Need by ${fmtDate(o.neededDate)}</span>
+    </div>
+    <div class="card-depts">${deptPills}</div>
+    ${o.notes ? `<div class="card-notes">📝 ${escapeHtml(o.notes)}</div>` : ''}
+    <div class="card-lines">
+      <div class="card-lines-title">Items (${o.lines.length})</div>
+      ${linesHtml}
+    </div>
+    ${pickInfo}
+    <div class="progress"><div class="progress-fill" style="width:${progressPctOrder(o)}%"></div></div>
+    <div class="card-actions">
+      ${primaryAction}
+      <button class="btn" data-act="open" data-order="${o.id}">Details</button>
+    </div>
+  `;
+
+  card.addEventListener('dragstart', e => {
+    e.dataTransfer.setData('text/orderId', o.id);
+    e.dataTransfer.effectAllowed = 'move';
+    card.classList.add('dragging');
+  });
+  card.addEventListener('dragend', () => card.classList.remove('dragging'));
+  return card;
+}
+
+function renderPendingCard(o) {
+  const depts = [...new Set(o.lines.map(l => l.department))];
+  const itemsLine = o.lines.slice(0, 4).map(l => formatLineDescription(l)).join(' · ') + (o.lines.length > 4 ? ` <em>+ ${o.lines.length-4} more</em>` : '');
+  const recipientGroups = {};
+  for (const r of (o.emailedTo || [])) {
+    (recipientGroups[r.dept] = recipientGroups[r.dept] || []).push(r.to);
+  }
+  const recipientsHtml = Object.keys(recipientGroups).length === 0
+    ? `<em style="color:var(--red)">No recipients configured — open ⚙ Settings.</em>`
+    : Object.entries(recipientGroups).map(([dept, addrs]) => `<div><strong style="display:inline;color:var(--cream);font-size:11px;text-transform:uppercase;letter-spacing:0.5px">${escapeHtml(dept)}</strong> · ${addrs.map(escapeHtml).join(', ')}</div>`).join('');
+  const mailto = buildMailtoLink(o);
+  const created = fmtDate(o.history?.[0]?.ts ? new Date(o.history[0].ts).toISOString() : o.orderDate);
+
+  return `
+    <div class="pending-card ${o.priority ? 'priority' : ''}" data-pending="${o.id}">
+      <div class="pending-customer">${o.priority ? '🚨 ' : ''}${escapeHtml(o.customerName)}</div>
+      <div class="pending-meta">${escapeHtml(o.takenBy)} · ${o.fulfillment === 'delivery' ? '🚚 Delivery' : '🛍 Pickup'} · 📅 ${fmtDate(o.neededDate)} · created ${created}</div>
+      <div class="pending-items">${depts.map(d => `<span class="card-dept dept-${d}">${DEPT_ICONS[d]} ${DEPT_LABELS[d]}</span>`).join(' ')}<div style="margin-top:6px">${itemsLine}</div></div>
+      <div class="pending-recipients"><strong>📧 Emails sent to ${(o.emailedTo||[]).length} recipient(s)</strong>${recipientsHtml}</div>
+      <div class="pending-actions">
+        ${canStartOrders() ? `
+        <button class="btn primary" style="flex:1;min-width:140px" onclick="startOrder('${o.id}')">▶ Start Order</button>
+        ${mailto ? `<a class="btn small" href="${mailto}" target="_blank" rel="noopener" style="text-decoration:none;display:inline-flex;align-items:center">📤 Open email draft</a>` : ''}
+        <button class="btn small danger-ghost" onclick="cancelPending('${o.id}')">Cancel</button>
+        ` : `<div style="flex:1;padding:10px;background:var(--panel);border-radius:8px;font-size:12px;color:var(--muted);text-align:center">🔒 Waiting for Front Desk to start this order</div>`}
+      </div>
+    </div>
+  `;
+}
+
+function efficiencyStats() {
+  const today = orders.filter(o => o.status === 'active' && o.timestamps.received && isToday(o.timestamps.received));
+  const completed = today.filter(o => o.timestamps.completed);
+  const avg = arr => arr.length ? arr.reduce((a,b) => a+b, 0) / arr.length : null;
+  const prepTimes = today.filter(o => o.timestamps.prepared).map(o => new Date(o.timestamps.prepared) - new Date(o.timestamps.received));
+  const fulfillTimes = completed.filter(o => o.timestamps.prepared).map(o => new Date(o.timestamps.completed) - new Date(o.timestamps.prepared));
+  const pickTimes = completed.filter(o => o.timestamps.pickingDone && o.timestamps.picking).map(o => new Date(o.timestamps.pickingDone) - new Date(o.timestamps.picking));
+  const deliverTimes = completed.filter(o => o.fulfillment === 'delivery' && o.timestamps.completed && o.timestamps.enroute).map(o => new Date(o.timestamps.completed) - new Date(o.timestamps.enroute));
+  return {
+    todayCount: today.length, completedCount: completed.length,
+    avgPrep: avg(prepTimes), avgFulfill: avg(fulfillTimes),
+    avgPick: avg(pickTimes), avgDeliver: avg(deliverTimes)
+  };
+}
+
+function render() {
+  // Drivers/clerks never see prep stages — snap before drawing
+  if (currentUser && roleInfo()?.pickupTime && ['received', 'acknowledged'].includes(currentStage)) {
+    currentStage = 'prepared';
+    localStorage.setItem(STAGE_KEY, currentStage);
+  }
+  document.getElementById('dateLabel').textContent =
+    new Date().toLocaleDateString([], { weekday:'long', month:'long', day:'numeric', year:'numeric' });
+
+  const visible = orders.filter(passesFilters);
+  const stageCounts = {};
+  STAGES.forEach(s => { stageCounts[s] = visible.filter(o => orderDisplayStage(o, userDept()) === s).length; });
+
+  STAGES.forEach(s => {
+    const tab = document.querySelector(`[data-stage-tab="${s}"]`);
+    if (!tab) return;
+    tab.querySelector('.count').textContent = stageCounts[s];
+    tab.classList.toggle('active', s === currentStage);
+  });
+
+  document.getElementById('stageIcon').textContent = STAGE_ICONS[currentStage];
+  document.getElementById('stageTitle').textContent = STAGE_LABELS[currentStage];
+  document.getElementById('stageCount').textContent = stageCounts[currentStage];
+  document.getElementById('stageSubtitle').textContent = STAGE_SUBTITLES[currentStage];
+
+  const stream = document.getElementById('cardStream');
+  stream.innerHTML = '';
+  const items = visible.filter(o => orderDisplayStage(o, userDept()) === currentStage);
+  if (items.length === 0) {
+    const otherStages = STAGES.filter(s => s !== currentStage && stageCounts[s] > 0);
+    const pendingCount = orders.filter(o => o.status === 'pending').length;
+    const stageJumps = otherStages.length
+      ? `<div class="empty-jumps" style="margin-top:24px">${otherStages.map(s => `<button class="btn small" onclick="switchStage('${s}')">${STAGE_ICONS[s]} ${STAGE_LABELS[s]} (${stageCounts[s]})</button>`).join('')}</div>`
+      : '';
+    if (pendingCount > 0 && canStartOrders()) {
+      // Giant sealed envelope — the letter is waiting to be opened (Front Desk / Admin only)
+      stream.innerHTML = `
+        <div class="empty-state">
+          <button class="pending-hero" onclick="openDrawer('drawerPending')" title="Open pending orders">
+            <div class="pending-hero-envelope">
+              <div class="pending-hero-seal">H</div>
+              <div class="pending-hero-count">${pendingCount}</div>
+              <div class="pending-hero-label">order${pendingCount === 1 ? '' : 's'} waiting to be started</div>
+              <div class="pending-hero-cta">✉ Tap to open</div>
+            </div>
+          </button>
+          ${stageJumps}
+        </div>
+      `;
+    } else {
+      const cta = otherStages.length ? stageJumps : `<button class="btn primary" onclick="openDrawer('drawerNew')">+ Create your first order</button>`;
+      stream.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-mascot">${mascotSVG()}</div>
+          <div class="empty-title">No orders in ${STAGE_LABELS[currentStage]}</div>
+          <div class="empty-sub">${otherStages.length ? 'The bees are busy elsewhere.' : 'Get started by creating your first order.'}</div>
+          ${cta}
+        </div>
+      `;
+    }
+  } else {
+    items.forEach(o => stream.appendChild(renderCard(o)));
+  }
+
+  // Metrics
+  const stats = efficiencyStats();
+  document.getElementById('mTotal').textContent = stats.todayCount;
+  document.getElementById('mActive').textContent = orders.filter(o => o.status === 'active' && o.fulfillmentStage !== 'completed').length;
+  document.getElementById('mAvgFulfill').textContent = stats.avgFulfill ? fmtDuration(stats.avgFulfill) : '—';
+
+  // Pending button + drawer
+  const pending = orders.filter(o => o.status === 'pending');
+  const btnPending = document.getElementById('btnPending');
+  const badge = document.getElementById('pendingBadge');
+  if (pending.length > 0 && canStartOrders()) {
+    btnPending.style.display = '';
+    btnPending.classList.add('pending-active');
+    badge.textContent = pending.length;
+    document.getElementById('pendingLabel').textContent = pending.length === 1 ? '1 pending' : `${pending.length} pending`;
+  } else {
+    btnPending.style.display = 'none';
+    btnPending.classList.remove('pending-active');
+  }
+  const mnavPending = document.getElementById('mnavPendingCount');
+  if (mnavPending) {
+    mnavPending.style.display = (pending.length && canStartOrders()) ? '' : 'none';
+    mnavPending.textContent = pending.length;
+  }
+
+  const pendingList = document.getElementById('pendingList');
+  if (pendingList) {
+    if (pending.length === 0) {
+      pendingList.innerHTML = '<div class="empty-state"><div class="empty-icon">📥</div><div class="empty-title">No pending orders</div><div class="empty-sub">New orders show here before they enter the workflow.</div></div>';
+    } else {
+      pendingList.innerHTML = pending.map(renderPendingCard).join('');
+    }
+  }
+
+  // Stats drawer — charts + condensed stats
+  renderChartWeekly();
+  renderChartFunnel();
+  renderChartDeptLoad();
+  const effEl = document.getElementById('effStats');
+  if (effEl) {
+    effEl.innerHTML = `
+      <div class="eff-row"><span>Avg prep time</span><span class="v">${stats.avgPrep ? fmtDuration(stats.avgPrep) : '—'}</span></div>
+      <div class="eff-row"><span>Avg pick time</span><span class="v">${stats.avgPick ? fmtDuration(stats.avgPick) : '—'}</span></div>
+      <div class="eff-row"><span>Avg delivery time</span><span class="v">${stats.avgDeliver ? fmtDuration(stats.avgDeliver) : '—'}</span></div>
+      <div class="eff-row"><span>Avg total fulfill</span><span class="v">${stats.avgFulfill ? fmtDuration(stats.avgFulfill) : '—'}</span></div>
+    `;
+  }
+
+  const hc = document.getElementById('honeycomb');
+  if (hc) {
+    hc.innerHTML = '';
+    DEPTS.forEach((d, idx) => {
+      const activeLines = orders.filter(o => o.status === 'active').flatMap(o => o.lines).filter(l => l.department === d && l.stage !== 'prepared').length;
+      const wrap = document.createElement('div');
+      wrap.className = 'hex-wrap' + (userDept() === d ? ' active' : '');
+      wrap.dataset.dept = d; wrap.dataset.pos = idx;
+      wrap.innerHTML = `<div class="hex">
+        <div class="hex-icon">${DEPT_ICONS[d]}</div>
+        <div class="hex-count">${activeLines}</div>
+        <div class="hex-name">${DEPT_LABELS[d]}</div>
+      </div>`;
+      wrap.onclick = () => {
+        const newRole = userDept() === d ? '' : 'dept:' + d;
+        userRole = newRole;
+        localStorage.setItem(ROLE_KEY, userRole);
+        document.getElementById('userRole').value = userRole;
+        currentStage = roleDefaultStage();
+        localStorage.setItem(STAGE_KEY, currentStage);
+        render();
+      };
+      hc.appendChild(wrap);
+    });
+  }
+
+  const histList = document.getElementById('historyList');
+  if (histList) {
+    histList.innerHTML = '';
+    if (history.length === 0) histList.innerHTML = '<div class="empty-state"><div class="empty-icon">📋</div><div class="empty-title">No activity yet</div></div>';
+    else {
+      history.slice(0, 80).forEach(h => {
+        const item = document.createElement('div');
+        item.className = 'history-item';
+        item.innerHTML = `<div class="history-time">${fmtDate(new Date(h.ts).toISOString())} · ${escapeHtml(h.by)}</div>
+          <div class="history-action">${escapeHtml(h.action)}</div>`;
+        histList.appendChild(item);
+      });
+    }
+  }
+
+  const dl = document.getElementById('customerList');
+  dl.innerHTML = Object.values(customers).sort((a,b) => b.lastSeen - a.lastSeen).slice(0, 50)
+    .map(c => `<option value="${escapeHtml(c.customerName)}">`).join('');
+
+  document.querySelectorAll('.filter-pill').forEach(p => p.classList.toggle('on', !!filters[p.dataset.filter]));
+  document.getElementById('dateFilter').value = filters.date;
+  document.getElementById('searchInput').value = filters.search;
+
+  // v8: authentication & envelope rail
+  if (typeof applyRolePermissions === 'function') applyRolePermissions();
+  if (typeof renderRail === 'function') renderRail();
+  if (typeof applyAttention === 'function') applyAttention();
+}
+
+// ============ ATTENTION FLASH ============
+// An order "needs action" if the signed-in role has work sitting untouched:
+//  - pending orders: waiting for someone to hit Start (any non-driver/clerk role in scope)
+//  - dept roles / admin / frontend: lines still in 'received' (not yet acknowledged)
+//  - driver / clerk: orders fully prepared but picking not started
+function orderNeedsAction(o) {
+  const d = scopeDept();
+  const f = scopeFulfillment();
+  if (o.status === 'pending') {
+    // Only Front Desk / Admin start orders, so only their screens flash for pending
+    return canStartOrders();
+  }
+  if (o.status !== 'active') return false;
+  if (d && !o.lines.some(l => l.department === d)) return false;
+  if (f && o.fulfillment !== f) return false;
+  if (roleInfo()?.pickupTime) {
+    return !o.fulfillmentStage && allLinesPrepared(o);
+  }
+  if (o.fulfillmentStage) return false;
+  const lines = d ? o.lines.filter(l => l.department === d) : o.lines;
+  return lines.some(l => l.stage === 'received');
+}
+
+// Per-department "waiting to be acknowledged" stats — powers the front-end mini-windows.
+// Urgent = an unacknowledged order due within 12 hours.
+function deptWaitingStats() {
+  const stats = {};
+  const now = Date.now();
+  for (const o of orders) {
+    if (o.status !== 'active' || o.fulfillmentStage) continue;
+    for (const d of DEPTS) {
+      const lines = o.lines.filter(l => l.department === d);
+      if (lines.length && lines.some(l => l.stage === 'received')) {
+        const s = stats[d] = stats[d] || { count: 0, urgent: 0 };
+        s.count++;
+        const due = o.neededDate ? new Date(o.neededDate).getTime() : Infinity;
+        if (due - now < 12 * 3600000) s.urgent++;
+      }
+    }
+  }
+  return stats;
+}
+
+function applyAttention() {
+  const banner = document.getElementById('attentionBanner');
+  if (!currentUser) {
+    document.body.classList.remove('flash-new', 'flash-urgent');
+    if (banner) banner.style.display = 'none';
+    return;
+  }
+  const needing = orders.filter(orderNeedsAction);
+  const now = Date.now();
+  const urgent = needing.filter(o => (o.neededDate ? new Date(o.neededDate).getTime() : Infinity) - now < 3600000).length;
+  const pending = needing.filter(o => o.status === 'pending').length;
+  const count = needing.length;
+
+  document.body.classList.toggle('flash-urgent', urgent > 0);
+  document.body.classList.toggle('flash-new', urgent === 0 && count > 0);
+
+  const allPending = pending > 0 && pending === count;
+  if (count > 0) {
+    banner.style.display = '';
+    banner.classList.toggle('urgent', urgent > 0);
+    let text;
+    if (urgent > 0) text = `⏰ ${urgent} order${urgent === 1 ? '' : 's'} due within 1 hour — act now!`;
+    else if (allPending) text = `📥 ${pending} order${pending === 1 ? '' : 's'} waiting to be started`;
+    else if (roleInfo()?.pickupTime) text = `🛒 ${count} order${count === 1 ? '' : 's'} ready to pick`;
+    else text = `📨 ${count} order${count === 1 ? '' : 's'} need${count === 1 ? 's' : ''} attention`;
+    document.getElementById('attentionText').textContent = text;
+    banner.dataset.target = allPending ? 'pending' : (roleInfo()?.pickupTime ? 'prepared' : 'received');
+  } else {
+    banner.style.display = 'none';
+  }
+  // Pulse the relevant stage tab too
+  const targetStage = roleInfo()?.pickupTime ? 'prepared' : 'received';
+  document.querySelectorAll('.stage-tab').forEach(t =>
+    t.classList.toggle('attention', count > pending && t.dataset.stageTab === targetStage));
+}
+
+document.getElementById('attentionBanner').onclick = function() {
+  if (this.dataset.target === 'pending') openDrawer('drawerPending');
+  else switchStage(this.dataset.target || 'received');
+};
+
+// Re-check every 15s — an order can cross the 1-hour threshold without any user action
+setInterval(applyAttention, 15_000);
+
+function switchStage(s) { currentStage = s; localStorage.setItem(STAGE_KEY, currentStage); render(); pulseTab(s); }
+
+// ============ MODAL ============
+let modalEditing = false;
+let modalMode = 'view';
+
+function openOrder(id) {
+  const o = orders.find(x => x.id === id); if (!o) return;
+  if (o.status === 'pending') { openDrawer('drawerPending'); return; }
+  modalEditing = false; modalMode = 'view';
+  renderModal(id);
+  document.getElementById('modal').classList.add('open');
+}
+function openPickList(id) {
+  if (!canPick()) { openOrder(id); return; } // depts get the read-only detail view instead
+  modalEditing = false; modalMode = 'pick'; renderModal(id); document.getElementById('modal').classList.add('open');
+}
+function renderModal(id) {
+  const o = orders.find(x => x.id === id); if (!o) return;
+  if (modalMode === 'pick') renderModalPick(o);
+  else if (modalEditing) renderModalEdit(o);
+  else renderModalView(o);
+}
+function renderModalView(o) {
+  document.getElementById('modalTitle').innerHTML = `${escapeHtml(o.customerName)} ${o.priority ? '<span style="color:var(--red);font-size:14px">● PRIORITY</span>' : ''}<button class="modal-close" id="modalClose">×</button>`;
+  document.getElementById('modalClose').onclick = closeModal;
+  const depts = [...new Set(o.lines.map(l => l.department))];
+
+  let fulfillBlock = '';
+  if (o.fulfillmentStage === 'enroute') {
+    const since = o.timestamps.enroute ? fmtDuration(Date.now() - new Date(o.timestamps.enroute)) : '';
+    const label = o.fulfillment === 'delivery' ? '🚚 Out for Delivery' : '🛍 Ready for Customer';
+    const action = o.fulfillment === 'delivery' ? 'Mark Delivered' : 'Mark Picked Up';
+    fulfillBlock = `<div class="fulfillment-card">
+      <div class="fulfillment-card-title">${label}</div>
+      <div style="font-size:13px;color:var(--muted);margin-bottom:10px">Since ${since}</div>
+      ${canPick() ? `<button class="btn success" style="width:100%" onclick="completeOrder('${o.id}')">${action} ✓</button>` : ''}
+    </div>`;
+  } else if (o.fulfillmentStage === 'completed') {
+    const total = fmtDuration(new Date(o.timestamps.completed) - new Date(o.timestamps.received));
+    fulfillBlock = `<div class="fulfillment-card" style="background:linear-gradient(135deg,rgba(16,185,129,0.15),rgba(45,212,191,0.1));border-color:var(--green)">
+      <div class="fulfillment-card-title" style="color:var(--green)">✓ Completed</div>
+      <div style="font-size:13px;color:var(--muted)">Total time: ${total}</div>
+    </div>`;
+  } else if (!o.fulfillmentStage && allLinesPrepared(o)) {
+    fulfillBlock = `<div class="fulfillment-card">
+      <div class="fulfillment-card-title">All items prepared</div>
+      <div style="font-size:13px;color:var(--muted);margin-bottom:10px">${canPick() ? `Ready to start ${o.fulfillment === 'delivery' ? 'driver pick + delivery' : 'clerk pick + handoff'}.` : `Waiting for the ${o.fulfillment === 'delivery' ? 'driver' : 'clerk'} to pick this order.`}</div>
+      ${canPick() ? `<button class="btn purple" style="width:100%" onclick="startPicking('${o.id}')">Start picking 🛒</button>` : ''}
+    </div>`;
+  }
+
+  const t = o.timestamps;
+  const stages = [
+    ['Created', o.history?.[0]?.ts ? new Date(o.history[0].ts).toISOString() : null, null],
+    ['Started', t.received, o.history?.[0]?.ts ? new Date(o.history[0].ts).toISOString() : null],
+    ['Acknowledged', t.acknowledged, t.received],
+    ['Prepared', t.prepared, t.received],
+    ['Picking started', t.picking, t.prepared],
+    ['Picking done', t.pickingDone, t.picking],
+    [o.fulfillment === 'delivery' ? 'Departed' : 'Ready', t.enroute, t.pickingDone || t.prepared],
+    ['Completed', t.completed, t.enroute]
+  ];
+  const timeline = stages.filter(([_, ts]) => ts).map(([label, ts, prev]) => {
+    const dur = prev ? fmtDuration(new Date(ts) - new Date(prev)) : '';
+    return `<div class="timeline-item">
+      <div style="color:var(--muted)">${fmtDate(ts)}${dur ? ' · +' + dur : ''}</div>
+      <div>${label}</div>
+    </div>`;
+  }).join('');
+
+  const recipientList = (o.emailedTo || []).length === 0
+    ? '<div style="color:var(--muted);font-size:12px">No emails were sent (no recipients configured at the time).</div>'
+    : (o.emailedTo || []).map(r => `<div style="font-size:12px;padding:4px 0;border-bottom:1px dashed var(--border)"><strong style="color:var(--cream);font-size:10px;text-transform:uppercase;letter-spacing:0.5px">${escapeHtml(r.dept)}</strong> · ${escapeHtml(r.to)}</div>`).join('');
+
+  document.getElementById('modalBody').innerHTML = `
+    ${fulfillBlock}
+    <div style="display:grid;gap:0;font-size:13px;margin-bottom:14px">
+      <div class="modal-row"><strong>Contact</strong><span>${escapeHtml(o.contact || '—')}</span></div>
+      <div class="modal-row"><strong>Phone</strong><span>${escapeHtml(o.phone || '—')}</span></div>
+      <div class="modal-row"><strong>Co-op #</strong><span>${escapeHtml(o.coopNumber || '—')}</span></div>
+      <div class="modal-row"><strong>Taken by</strong><span>${escapeHtml(o.takenBy)}</span></div>
+      <div class="modal-row"><strong>Departments</strong><span>${depts.map(d => `<span class="card-dept dept-${d}">${DEPT_ICONS[d]} ${DEPT_LABELS[d]}</span>`).join(' ')}</span></div>
+      <div class="modal-row"><strong>Fulfillment</strong><span>${o.fulfillment === 'delivery' ? '🚚 Delivery' : '🛍 Pickup'}</span></div>
+      <div class="modal-row"><strong>Ordered</strong><span>${fmtDateLong(o.orderDate)}</span></div>
+      <div class="modal-row"><strong>Started</strong><span>${o.timestamps.received ? fmtDateLong(o.timestamps.received) : '—'}</span></div>
+      <div class="modal-row"><strong>Needed</strong><span>${fmtDateLong(o.neededDate)}</span></div>
+      ${o.notes ? `<div class="modal-row" style="flex-direction:column;align-items:flex-start;gap:4px"><strong>Notes</strong><span style="text-align:left">${escapeHtml(o.notes)}</span></div>` : ''}
+    </div>
+    <div class="progress"><div class="progress-fill" style="width:${progressPctOrder(o)}%"></div></div>
+
+    <div class="section-title">Items (${o.lines.length})</div>
+    ${o.lines.map(l => `
+      <div class="modal-line">
+        <span class="line-stage-dot stage-dot-${l.stage}"></span>
+        <div>
+          <div style="font-size:14px">${formatLineDescription(l)}</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:3px">
+            <span class="card-dept dept-${l.department}">${DEPT_ICONS[l.department]} ${DEPT_LABELS[l.department]}</span>
+            <span style="margin-left:6px">${LOCATIONS[l.location].icon} ${LOCATIONS[l.location].label}</span>
+            ${l.picked ? '<span style="color:var(--green);margin-left:6px">✓ picked</span>' : ''}
+          </div>
+        </div>
+        <select class="modal-line-stage-select" onchange="setLineStage('${o.id}','${l.id}',this.value)">
+          ${LINE_STAGES.map(s => `<option value="${s}" ${s === l.stage ? 'selected' : ''}>${STAGE_LABELS[s]}</option>`).join('')}
+        </select>
+        <button class="btn small" onclick="regressLine('${o.id}','${l.id}')" ${l.stage === 'received' ? 'disabled style="opacity:0.4;cursor:not-allowed"' : ''}>←</button>
+      </div>
+    `).join('')}
+
+    <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">
+      <button class="btn small" onclick="togglePriority('${o.id}')">${o.priority ? 'Clear priority' : '🚨 Mark priority'}</button>
+      <button class="btn small" onclick="enterEditMode('${o.id}')">✎ Edit</button>
+      ${o.fulfillmentStage === 'picking' && canPick() ? `<button class="btn small purple" onclick="openPickList('${o.id}')">🛒 Pick list</button>` : ''}
+      <button class="btn small danger-ghost" onclick="deleteOrder('${o.id}')">Delete</button>
+    </div>
+
+    <div class="section-title">Email Recipients</div>
+    <div>${recipientList}</div>
+
+    <div class="section-title">Timeline</div>
+    <div style="display:flex;flex-direction:column;gap:4px;max-height:240px;overflow-y:auto">${timeline}</div>
+
+    <div class="section-title">Activity Log</div>
+    <div style="display:flex;flex-direction:column;gap:4px;max-height:200px;overflow-y:auto">
+      ${[...o.history].reverse().map(h => `<div class="timeline-item">
+        <div style="color:var(--muted)">${fmtDate(new Date(h.ts).toISOString())} · ${escapeHtml(h.by)}</div>
+        <div>${escapeHtml(h.action)}</div>
+      </div>`).join('')}
+    </div>
+  `;
+}
+
+function renderModalPick(o) {
+  document.getElementById('modalTitle').innerHTML = `🛒 Picking — ${escapeHtml(o.customerName)}<button class="modal-close" id="modalClose">×</button>`;
+  document.getElementById('modalClose').onclick = closeModal;
+  const groups = {};
+  for (const l of o.lines) (groups[l.location] = groups[l.location] || []).push(l);
+  const groupKeys = Object.keys(groups).sort((a,b) => LOCATIONS[a].order - LOCATIONS[b].order);
+  const total = o.lines.length;
+  const picked = o.lines.filter(l => l.picked).length;
+  const allDone = picked === total;
+  const fulfillmentRow = o.fulfillment === 'delivery'
+    ? `<span>🚚 Delivery</span> ${o.address ? `<span>📍 ${escapeHtml(o.address)}</span>` : ''}`
+    : `<span>🛍 Pickup at store</span>`;
+  const ctaLabel = o.fulfillment === 'delivery' ? 'Picking done — Start Delivery 🚚' : 'Picking done — Ready for Customer 🛍';
+
+  document.getElementById('modalBody').innerHTML = `
+    <div class="pick-header">
+      <div class="pick-customer">${escapeHtml(o.customerName)}</div>
+      <div class="pick-meta-row">
+        ${o.phone ? `<span>📞 ${escapeHtml(o.phone)}</span>` : ''}
+        ${o.coopNumber ? `<span>#${escapeHtml(o.coopNumber)}</span>` : ''}
+        ${fulfillmentRow}
+      </div>
+      ${o.notes ? `<div style="font-size:13px;color:var(--cream);margin-top:6px">📝 ${escapeHtml(o.notes)}</div>` : ''}
+      <div class="pick-progress-text" style="margin-top:12px"><span>Progress</span><span>${picked} / ${total}</span></div>
+      <div class="pick-progress-bar"><div class="pick-progress-fill" style="width:${(picked/total)*100}%"></div></div>
+    </div>
+    ${groupKeys.map(loc => `
+      <div class="pick-group">
+        <div class="pick-group-header">
+          <span class="loc-icon">${LOCATIONS[loc].icon}</span>
+          <span class="loc-name">${LOCATIONS[loc].label}</span>
+          <span class="loc-count">${groups[loc].filter(l=>l.picked).length} / ${groups[loc].length}</span>
+        </div>
+        ${groups[loc].map(l => `
+          <div class="pick-item ${l.picked ? 'picked' : ''}" data-toggle-line="${l.id}">
+            <div class="pick-checkbox">${l.picked ? '✓' : ''}</div>
+            <div>
+              <div class="pick-item-name">${formatLineDescription(l)}</div>
+              <div class="pick-item-meta">
+                <span class="card-dept dept-${l.department}">${DEPT_ICONS[l.department]} ${DEPT_LABELS[l.department]}</span>
+              </div>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    `).join('')}
+    <div class="pick-cta">
+      <button class="btn success" style="width:100%" id="pickCompleteBtn" ${allDone ? '' : 'disabled style="opacity:0.5;cursor:not-allowed;background:var(--comb-light);color:var(--muted)"'}>${ctaLabel}</button>
+      <button class="btn small" style="margin-top:8px;width:100%" onclick="exitPickMode('${o.id}')">Back to details</button>
+    </div>
+  `;
+  document.querySelectorAll('[data-toggle-line]').forEach(el => el.onclick = () => togglePick(o.id, el.dataset.toggleLine));
+  document.getElementById('pickCompleteBtn').onclick = () => completePickAndStart(o.id);
+}
+function exitPickMode(orderId) { modalMode = 'view'; renderModal(orderId); }
+function enterEditMode(id) { modalEditing = true; modalMode = 'edit'; renderModal(id); }
+function renderModalEdit(o) {
+  document.getElementById('modalTitle').innerHTML = `Edit — ${escapeHtml(o.customerName)}<button class="modal-close" id="modalClose">×</button>`;
+  document.getElementById('modalClose').onclick = closeModal;
+  document.getElementById('modalBody').innerHTML = `
+    <form id="editForm" autocomplete="off">
+      <div class="form-group"><label>Customer Name</label><input name="customerName" value="${escapeHtml(o.customerName)}" required></div>
+      <div class="row-2">
+        <div class="form-group"><label>Contact</label><input name="contact" value="${escapeHtml(o.contact)}"></div>
+        <div class="form-group"><label>Phone</label><input name="phone" type="tel" value="${escapeHtml(o.phone)}"></div>
+      </div>
+      <div class="row-2">
+        <div class="form-group"><label>Co-op #</label><input name="coopNumber" value="${escapeHtml(o.coopNumber)}"></div>
+        <div class="form-group"><label>Taken by</label><input name="takenBy" value="${escapeHtml(o.takenBy)}" required></div>
+      </div>
+      <div class="form-group">
+        <label>Fulfillment</label>
+        <select name="fulfillment" id="editFulfillment">
+          <option value="pickup" ${o.fulfillment === 'pickup' ? 'selected' : ''}>Pickup</option>
+          <option value="delivery" ${o.fulfillment === 'delivery' ? 'selected' : ''}>Delivery</option>
+        </select>
+      </div>
+      <div class="form-group" id="editAddressGroup" style="display:${o.fulfillment === 'delivery' ? '' : 'none'}">
+        <label>📍 Delivery Address</label>
+        <input name="address" value="${escapeHtml(o.address || '')}" placeholder="Street, city, postal code">
+      </div>
+      <div class="form-group">
+        <label>Needed by</label>
+        <div class="row-2">
+          <input name="neededDate" type="date" value="${splitISO(o.neededDate)[0]}" required>
+          <input name="neededTime" type="time" value="${splitISO(o.neededDate)[1]}" required>
+        </div>
+      </div>
+      <div class="form-group"><label>Items</label><div id="editLineRows" class="line-rows"></div>
+        <button type="button" class="add-line" id="editAddLine">+ Add item</button>
+      </div>
+      <div class="form-group"><label>Notes</label><textarea name="notes" rows="2">${escapeHtml(o.notes)}</textarea></div>
+      <div style="display:flex;gap:8px;margin-top:14px">
+        <button type="button" class="btn ghost" id="cancelEdit" style="flex:1">Cancel</button>
+        <button type="submit" class="btn primary" style="flex:2">Save Changes</button>
+      </div>
+    </form>
+  `;
+  let editLines = o.lines.map(l => ({ ...l }));
+  function renderEL() {
+    const c = document.getElementById('editLineRows'); c.innerHTML = '';
+    editLines.forEach((line, idx) => {
+      const row = document.createElement('div');
+      row.className = 'line-row';
+      row.innerHTML = `
+        <input type="text" placeholder="Item name" value="${escapeHtml(line.name)}" data-field="name">
+        <div class="grid-2">
+          <input type="number" min="0" step="any" placeholder="Qty" value="${escapeHtml(line.qty)}" data-field="qty">
+          <select data-field="unit">${UNITS.map(u => `<option value="${u.id}" ${u.id===(line.unit||'ea')?'selected':''}>${u.label}${u.id!=='ea'&&u.id!==u.plural?' / '+u.plural:''}</option>`).join('')}</select>
+        </div>
+        <div class="grid-2">
+          <select data-field="department">${DEPTS.map(d => `<option value="${d}" ${d===line.department?'selected':''}>${DEPT_ICONS[d]} ${DEPT_LABELS[d]}</option>`).join('')}</select>
+          <select data-field="location">${LOCATION_KEYS.map(k => `<option value="${k}" ${k===line.location?'selected':''}>${LOCATIONS[k].icon} ${LOCATIONS[k].label}</option>`).join('')}</select>
+        </div>
+        ${editLines.length > 1 ? '<button type="button" class="line-remove">Remove</button>' : ''}
+      `;
+      row.querySelectorAll('[data-field]').forEach(el => {
+        el.addEventListener('input', () => { editLines[idx][el.dataset.field] = el.value; });
+        el.addEventListener('change', () => {
+          editLines[idx][el.dataset.field] = el.value;
+          if (el.dataset.field === 'department' && DEPT_DEFAULT_LOCATION[el.value]) {
+            editLines[idx].location = DEPT_DEFAULT_LOCATION[el.value]; renderEL();
+          }
+        });
+      });
+      const rm = row.querySelector('.line-remove');
+      if (rm) rm.onclick = () => { editLines.splice(idx,1); renderEL(); };
+      c.appendChild(row);
+    });
+  }
+  renderEL();
+  document.getElementById('editAddLine').onclick = () => {
+    const d = userDept() || 'grocery';
+    editLines.push({ name:'', qty:'', unit:'ea', department:d, location:DEPT_DEFAULT_LOCATION[d] });
+    renderEL();
+  };
+  document.getElementById('cancelEdit').onclick = () => { modalEditing=false; modalMode='view'; renderModal(o.id); };
+  document.getElementById('editFulfillment').addEventListener('change', e => {
+    document.getElementById('editAddressGroup').style.display = e.target.value === 'delivery' ? '' : 'none';
+  });
+  document.getElementById('editForm').addEventListener('submit', e => {
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    const updates = Object.fromEntries(fd);
+    updates.neededDate = combineDateTime(fd.get('neededDate'), fd.get('neededTime'));
+    if (updates.fulfillment !== 'delivery') updates.address = '';
+    const cleaned = editLines.filter(l => l.name && l.name.trim());
+    if (cleaned.length === 0) { alert('At least one item required.'); return; }
+    modalEditing = false; modalMode = 'view';
+    editOrder(o.id, updates, cleaned);
+  });
+}
+function closeModal() { modalEditing=false; modalMode='view'; document.getElementById('modal').classList.remove('open'); }
+
+// ============ NEW ORDER FORM ============
+let formLines = [{ name:'', qty:'', unit:'ea', department:'grocery', location:'dry' }];
+function renderFormLines() {
+  const container = document.getElementById('lineRows');
+  container.innerHTML = '';
+  formLines.forEach((line, idx) => {
+    const row = document.createElement('div');
+    row.className = 'line-row';
+    row.innerHTML = `
+      <input type="text" placeholder="Item name (e.g. ground beef)" value="${escapeHtml(line.name)}" data-field="name">
+      <div class="grid-2">
+        <input type="number" min="0" step="any" placeholder="Qty" value="${escapeHtml(line.qty)}" data-field="qty">
+        <select data-field="unit">${UNITS.map(u => `<option value="${u.id}" ${u.id===(line.unit||'ea')?'selected':''}>${u.label}${u.id!=='ea'&&u.id!==u.plural?' / '+u.plural:''}</option>`).join('')}</select>
+      </div>
+      <div class="grid-2">
+        <select data-field="department">${DEPTS.map(d => `<option value="${d}" ${d===line.department?'selected':''}>${DEPT_ICONS[d]} ${DEPT_LABELS[d]}</option>`).join('')}</select>
+        <select data-field="location">${LOCATION_KEYS.map(k => `<option value="${k}" ${k===line.location?'selected':''}>${LOCATIONS[k].icon} ${LOCATIONS[k].label}</option>`).join('')}</select>
+      </div>
+      ${formLines.length > 1 ? '<button type="button" class="line-remove">Remove</button>' : ''}
+    `;
+    row.querySelectorAll('[data-field]').forEach(el => {
+      el.addEventListener('input', () => { formLines[idx][el.dataset.field] = el.value; });
+      el.addEventListener('change', () => {
+        formLines[idx][el.dataset.field] = el.value;
+        if (el.dataset.field === 'department' && DEPT_DEFAULT_LOCATION[el.value]) {
+          formLines[idx].location = DEPT_DEFAULT_LOCATION[el.value]; renderFormLines();
+        }
+      });
+    });
+    const rm = row.querySelector('.line-remove');
+    if (rm) rm.onclick = () => { formLines.splice(idx,1); renderFormLines(); };
+    container.appendChild(row);
+  });
+}
+renderFormLines();
+document.getElementById('addLine').onclick = () => {
+  const d = userDept() || 'grocery';
+  formLines.push({ name:'', qty:'', unit:'', department:d, location:DEPT_DEFAULT_LOCATION[d] });
+  renderFormLines();
+};
+document.getElementById('orderForm').addEventListener('submit', e => {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  const data = Object.fromEntries(fd);
+  data.priority = !!fd.get('priority');
+  // Combine date+time inputs back into a single ISO timestamp
+  data.neededDate = combineDateTime(fd.get('neededDate'), fd.get('neededTime'));
+  if (data.fulfillment !== 'delivery') data.address = '';
+  const ok = createOrder(data, formLines);
+  if (ok) {
+    e.target.reset();
+    document.getElementById('newAddressGroup').style.display = 'none';
+    const d = userDept() || 'grocery';
+    formLines = [{ name:'', qty:'', unit:'ea', department:d, location:DEPT_DEFAULT_LOCATION[d] }];
+    renderFormLines();
+    closeDrawers();
+    openDrawer('drawerPending');
+  }
+});
+// Reveal address field only when delivery is selected
+document.getElementById('newFulfillment').addEventListener('change', e => {
+  document.getElementById('newAddressGroup').style.display = e.target.value === 'delivery' ? '' : 'none';
+});
+document.querySelector('input[name="customerName"]').addEventListener('input', e => {
+  const c = customers[e.target.value.trim().toLowerCase()];
+  if (c) {
+    const form = document.getElementById('orderForm');
+    if (!form.contact.value) form.contact.value = c.contact || '';
+    if (!form.phone.value) form.phone.value = c.phone || '';
+    if (!form.coopNumber.value) form.coopNumber.value = c.coopNumber || '';
+  }
+});
+
+// ============ EMAIL SETTINGS FORM (dynamic) ============
+const EMAIL_GROUPS = [
+  { id: 'frontDesk', label: '🏢 Front Desk (always notified)' },
+  { id: 'grocery',   label: '🛒 Grocery' },
+  { id: 'meat',      label: '🥩 Meat' },
+  { id: 'deli',      label: '🧀 Deli' },
+  { id: 'bakery',    label: '🥐 Bakery' },
+  { id: 'produce',   label: '🥬 Produce' }
+];
+let editingEmails = {};
+
+function loadEmailForm() {
+  // Deep-copy so the user can cancel by closing the drawer without saving
+  editingEmails = {};
+  for (const g of EMAIL_GROUPS) {
+    const arr = (emails[g.id] && emails[g.id].length) ? [...emails[g.id]] : ['', ''];
+    editingEmails[g.id] = arr.length ? arr : ['', ''];
+  }
+  renderEmailGroups();
+}
+
+function renderEmailGroups() {
+  const container = document.getElementById('emailGroupsContainer');
+  container.innerHTML = '';
+  for (const g of EMAIL_GROUPS) {
+    const addrs = editingEmails[g.id];
+    const div = document.createElement('div');
+    div.className = 'email-group';
+    div.innerHTML = `
+      <div class="email-group-title">${g.label}</div>
+      <div class="email-list" data-group="${g.id}">
+        ${addrs.map((a, i) => `
+          <div class="email-row">
+            <input class="email-input" type="email" value="${escapeHtml(a)}" data-idx="${i}" placeholder="${g.id}${i+1}@coop.com">
+            ${addrs.length > 1 ? `<button type="button" class="email-remove" data-idx="${i}" title="Remove">×</button>` : ''}
+          </div>
+        `).join('')}
+      </div>
+      <button type="button" class="email-add" data-add="${g.id}">+ Add another email</button>
+    `;
+    container.appendChild(div);
+  }
+  // Wire inputs
+  container.querySelectorAll('.email-input').forEach(inp => {
+    inp.addEventListener('input', () => {
+      const group = inp.closest('.email-list').dataset.group;
+      const idx = parseInt(inp.dataset.idx);
+      editingEmails[group][idx] = inp.value;
+    });
+  });
+  container.querySelectorAll('.email-remove').forEach(btn => {
+    btn.onclick = () => {
+      const group = btn.closest('.email-list').dataset.group;
+      const idx = parseInt(btn.dataset.idx);
+      editingEmails[group].splice(idx, 1);
+      if (editingEmails[group].length === 0) editingEmails[group] = [''];
+      renderEmailGroups();
+    };
+  });
+  container.querySelectorAll('[data-add]').forEach(btn => {
+    btn.onclick = () => {
+      editingEmails[btn.dataset.add].push('');
+      renderEmailGroups();
+    };
+  });
+}
+
+document.getElementById('emailForm').addEventListener('submit', e => {
+  e.preventDefault();
+  const out = {};
+  for (const g of EMAIL_GROUPS) {
+    out[g.id] = (editingEmails[g.id] || []).map(s => (s || '').trim()).filter(Boolean);
+    if (out[g.id].length === 0) out[g.id] = ['',''];
+  }
+  emails = out; save(); render();
+  toast({ icon: '⚙', title: 'Email recipients saved', sub: 'Future orders will use these addresses.', type: 'success' });
+  closeDrawers();
+});
+
+// ============ CARD STREAM CLICK DELEGATION ============
+document.getElementById('cardStream').addEventListener('click', e => {
+  const btn = e.target.closest('[data-act]');
+  if (!btn) return;
+  const orderId = btn.dataset.order;
+  e.stopPropagation();
+  switch (btn.dataset.act) {
+    case 'line-advance': advanceLine(orderId, btn.dataset.line); break;
+    case 'start-picking': startPicking(orderId); break;
+    case 'open-pick': openPickList(orderId); break;
+    case 'complete-pick': completePickAndStart(orderId); break;
+    case 'complete': completeOrder(orderId); break;
+    case 'open': openOrder(orderId); break;
+    case 'advance-all': {
+      const o = orders.find(x => x.id === orderId); if (!o) return;
+      const lines = visibleLinesOf(o, userDept()).filter(l => l.stage !== 'prepared');
+      if (lines.length === 0) return;
+      lines.forEach(l => { const idx = LINE_STAGES.indexOf(l.stage); l.stage = LINE_STAGES[Math.min(idx + 1, LINE_STAGES.length - 1)]; });
+      o.history.push({ ts: Date.now(), action: `Advanced ${lines.length} item(s)${userDept() ? ' ('+DEPT_LABELS[userDept()]+')' : ''}`, by: whoAmI() });
+      addHistoryEntry(o.id, `${o.customerName}: advanced ${lines.length} item(s)`);
+      maybeAdvanceFulfillment(o);
+      save(); render(); flashCard(o.id);
+      new Set(lines.map(l => l.department)).forEach(d => pingDept(d));
+      broadcast({ flashId: o.id });
+      break;
+    }
+  }
+});
+
+// Stage tab click + drop
+document.querySelectorAll('.stage-tab').forEach(tab => {
+  tab.addEventListener('click', () => switchStage(tab.dataset.stageTab));
+  tab.addEventListener('dragover', e => { e.preventDefault(); tab.classList.add('drop-target'); });
+  tab.addEventListener('dragleave', () => tab.classList.remove('drop-target'));
+  tab.addEventListener('drop', e => {
+    e.preventDefault(); tab.classList.remove('drop-target');
+    const orderId = e.dataTransfer.getData('text/orderId');
+    if (!orderId) return;
+    setOrderStageByDrop(orderId, tab.dataset.stageTab);
+  });
+});
+
+// Role
+document.getElementById('userRole').addEventListener('change', e => {
+  userRole = e.target.value;
+  localStorage.setItem(ROLE_KEY, userRole);
+  currentStage = roleDefaultStage();
+  localStorage.setItem(STAGE_KEY, currentStage);
+  render();
+});
+
+// Theme
+function applyTheme() {
+  document.documentElement.setAttribute('data-theme', theme);
+  document.getElementById('themeToggle').textContent = theme === 'dark' ? '🌓' : '☀';
+}
+document.getElementById('themeToggle').onclick = () => { theme = theme==='dark'?'light':'dark'; localStorage.setItem(THEME_KEY, theme); applyTheme(); };
+applyTheme();
+
+// Drawers
+function openDrawer(id) {
+  closeDrawers();
+  document.getElementById(id).classList.add('open');
+  document.getElementById('drawerOverlay').classList.add('open');
+}
+function closeDrawers() {
+  document.querySelectorAll('.drawer').forEach(d => d.classList.remove('open'));
+  document.getElementById('drawerOverlay').classList.remove('open');
+  document.getElementById('railLeft')?.classList.remove('mobile-open');
+}
+// Mobile bottom nav
+function toggleMobileInbox() {
+  const rail = document.getElementById('railLeft');
+  const willOpen = !rail.classList.contains('mobile-open');
+  closeDrawers();
+  if (willOpen) {
+    rail.classList.add('mobile-open');
+    document.getElementById('drawerOverlay').classList.add('open');
+  }
+}
+document.querySelectorAll('[data-mnav]').forEach(b => {
+  b.onclick = () => {
+    switch (b.dataset.mnav) {
+      case 'inbox': toggleMobileInbox(); break;
+      case 'new': if (roleInfo()?.canCreate) openDrawer('drawerNew'); break;
+      case 'stats': openDrawer('drawerStats'); break;
+      case 'pending': if (canStartOrders()) openDrawer('drawerPending'); break;
+      case 'history': openDrawer('drawerHistory'); break;
+    }
+  };
+});
+document.getElementById('btnNew').onclick = () => openDrawer('drawerNew');
+document.getElementById('btnPending').onclick = () => openDrawer('drawerPending');
+document.getElementById('btnStats').onclick = () => openDrawer('drawerStats');
+document.getElementById('btnHistory').onclick = () => openDrawer('drawerHistory');
+document.getElementById('btnSettings').onclick = () => { loadEmailForm(); openDrawer('drawerSettings'); };
+document.getElementById('drawerOverlay').onclick = closeDrawers;
+document.querySelectorAll('[data-close-drawer]').forEach(b => b.onclick = closeDrawers);
+
+// Filters
+document.getElementById('searchInput').addEventListener('input', e => { filters.search = e.target.value; localStorage.setItem(FILTERS_KEY, JSON.stringify(filters)); render(); });
+document.querySelectorAll('.filter-pill').forEach(p => {
+  p.addEventListener('click', () => {
+    const key = p.dataset.filter;
+    filters[key] = !filters[key];
+    if (key === 'pickup' && filters.pickup) filters.delivery = false;
+    if (key === 'delivery' && filters.delivery) filters.pickup = false;
+    localStorage.setItem(FILTERS_KEY, JSON.stringify(filters));
+    render();
+  });
+});
+document.getElementById('dateFilter').addEventListener('change', e => { filters.date = e.target.value; localStorage.setItem(FILTERS_KEY, JSON.stringify(filters)); render(); });
+document.getElementById('clearFilters').addEventListener('click', () => { filters = { priority:false, pickup:false, delivery:false, date:'all', search:'' }; localStorage.setItem(FILTERS_KEY, JSON.stringify(filters)); render(); });
+
+document.getElementById('modal').addEventListener('click', e => { if (e.target.id === 'modal') closeModal(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeModal(); closeDrawers(); } });
+
+// Init
+document.getElementById('userRole').value = userRole;
+if (!STAGES.includes(currentStage)) currentStage = roleDefaultStage();
+render();
+
+setInterval(render, 30_000);
+setInterval(() => { document.getElementById('dateLabel').textContent = new Date().toLocaleDateString([], { weekday:'long', month:'long', day:'numeric', year:'numeric' }); }, 60_000);
+
+// Demo seed disabled in the online build — the hive starts empty and data comes from Firestore.
+
+// ============ SVG ILLUSTRATIONS ============
+function logoSVG() {
+  return `<svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%">
+    <defs>
+      <linearGradient id="lgHex" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stop-color="#fcd34d"/>
+        <stop offset="100%" stop-color="#b45309"/>
+      </linearGradient>
+      <linearGradient id="lgBee" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#fcd34d"/>
+        <stop offset="100%" stop-color="#f59e0b"/>
+      </linearGradient>
+    </defs>
+    <path d="M24 2.5 L42 13 L42 35 L24 45.5 L6 35 L6 13 Z" fill="none" stroke="url(#lgHex)" stroke-width="2.5" stroke-linejoin="round"/>
+    <g transform="translate(24 25)">
+      <ellipse cx="-6" cy="-8" rx="6" ry="3.5" fill="rgba(255,255,255,0.55)" transform="rotate(-22)"/>
+      <ellipse cx="6" cy="-8" rx="6" ry="3.5" fill="rgba(255,255,255,0.55)" transform="rotate(22)"/>
+      <ellipse cx="0" cy="1" rx="10" ry="7" fill="url(#lgBee)"/>
+      <path d="M-9 -1 Q0 -4 9 -1" stroke="#1f1810" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+      <path d="M-8 3 Q0 1 8 3" stroke="#1f1810" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+      <path d="M-6 6 Q0 4 6 6" stroke="#1f1810" stroke-width="1.4" fill="none" stroke-linecap="round"/>
+    </g>
+  </svg>`;
+}
+
+function mascotSVG() {
+  return `<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%">
+    <defs>
+      <radialGradient id="mBody" cx="0.4" cy="0.3">
+        <stop offset="0%" stop-color="#fcd34d"/>
+        <stop offset="100%" stop-color="#f59e0b"/>
+      </radialGradient>
+      <linearGradient id="mWing" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="rgba(255,255,255,0.85)"/>
+        <stop offset="100%" stop-color="rgba(255,255,255,0.15)"/>
+      </linearGradient>
+    </defs>
+    <!-- motion trail -->
+    <path d="M30 100 Q50 80 80 95" stroke="rgba(245,158,11,0.25)" stroke-width="3" stroke-linecap="round" stroke-dasharray="2 5" fill="none"/>
+    <!-- wings -->
+    <ellipse cx="78" cy="65" rx="32" ry="22" fill="url(#mWing)" transform="rotate(-22 78 65)"/>
+    <ellipse cx="118" cy="65" rx="32" ry="22" fill="url(#mWing)" transform="rotate(22 118 65)"/>
+    <!-- body -->
+    <ellipse cx="100" cy="115" rx="58" ry="44" fill="url(#mBody)"/>
+    <!-- stripes -->
+    <path d="M50 105 Q100 95 150 105" stroke="#1f1810" stroke-width="8" fill="none" stroke-linecap="round"/>
+    <path d="M52 125 Q100 117 148 125" stroke="#1f1810" stroke-width="8" fill="none" stroke-linecap="round"/>
+    <path d="M58 142 Q100 137 142 142" stroke="#1f1810" stroke-width="6" fill="none" stroke-linecap="round"/>
+    <!-- face -->
+    <circle cx="82" cy="100" r="5" fill="#1f1810"/>
+    <circle cx="84" cy="98" r="1.5" fill="white"/>
+    <circle cx="118" cy="100" r="5" fill="#1f1810"/>
+    <circle cx="120" cy="98" r="1.5" fill="white"/>
+    <path d="M92 113 Q100 119 108 113" stroke="#1f1810" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+    <!-- antennae -->
+    <path d="M82 78 Q72 62 75 50" stroke="#1f1810" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+    <path d="M118 78 Q128 62 125 50" stroke="#1f1810" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+    <circle cx="75" cy="50" r="3" fill="#1f1810"/>
+    <circle cx="125" cy="50" r="3" fill="#1f1810"/>
+    <!-- stinger -->
+    <path d="M156 115 L172 115 L162 122 Z" fill="#1f1810"/>
+  </svg>`;
+}
+
+// ============ CHARTS ============
+function renderChartWeekly() {
+  const host = document.getElementById('chartWeekly');
+  if (!host) return;
+  const days = [];
+  const today = new Date();
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(today); d.setHours(0,0,0,0); d.setDate(today.getDate() - i);
+    const next = new Date(d); next.setDate(d.getDate() + 1);
+    const count = orders.filter(o => o.status === 'active' && o.timestamps.received && new Date(o.timestamps.received) >= d && new Date(o.timestamps.received) < next).length;
+    days.push({ d, count, label: d.toLocaleDateString([], { weekday: 'short' })[0] });
+  }
+  const total = days.reduce((a,b) => a + b.count, 0);
+  const max = Math.max(1, ...days.map(d => d.count));
+  const W = 280, H = 90, pad = 14, barW = (W - pad*2) / days.length - 4;
+  const bars = days.map((day, i) => {
+    const x = pad + i * ((W - pad*2) / days.length) + 2;
+    const h = (day.count / max) * (H - 30);
+    const y = H - 18 - h;
+    const isToday = i === days.length - 1;
+    return `<rect class="chart-bar-rect" x="${x}" y="${y}" width="${barW}" height="${Math.max(2,h)}" rx="3"
+      fill="${isToday ? 'url(#cwToday)' : 'url(#cwBar)'}"/>
+      <text class="chart-axis-text" x="${x + barW/2}" y="${H - 4}" text-anchor="middle">${day.label}</text>
+      ${day.count > 0 ? `<text class="chart-axis-text" x="${x + barW/2}" y="${y - 4}" text-anchor="middle" style="font-weight:700;fill:var(--honey-light)">${day.count}</text>` : ''}`;
+  }).join('');
+  host.innerHTML = `
+    <div class="chart-card">
+      <div class="chart-head">
+        <div class="chart-title">Last 7 Days</div>
+        <div class="chart-value">${total}<small>orders</small></div>
+      </div>
+      <svg class="chart-svg" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="cwBar" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#fcd34d"/><stop offset="100%" stop-color="#b45309"/></linearGradient>
+          <linearGradient id="cwToday" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#fef3c7"/><stop offset="100%" stop-color="#f59e0b"/></linearGradient>
+        </defs>
+        ${bars}
+      </svg>
+    </div>
+  `;
+}
+
+function renderChartFunnel() {
+  const host = document.getElementById('chartFunnel');
+  if (!host) return;
+  const counts = {};
+  STAGES.forEach(s => counts[s] = 0);
+  for (const o of orders) {
+    if (o.status !== 'active') continue;
+    const s = orderDisplayStage(o);
+    if (s) counts[s]++;
+  }
+  const max = Math.max(1, ...Object.values(counts));
+  const colors = { received:'#60a5fa', acknowledged:'#f59e0b', prepared:'#fcd34d', picking:'#c084fc', enroute:'#2dd4bf', completed:'#10b981' };
+  const rows = STAGES.map(s => {
+    const pct = (counts[s] / max) * 100;
+    return `<div class="funnel-row">
+      <span class="funnel-label">${STAGE_ICONS[s]} ${STAGE_LABELS[s]}</span>
+      <div class="funnel-bar-wrap"><div class="funnel-bar" style="width:${pct}%;background:${colors[s]}"></div></div>
+      <span class="funnel-count">${counts[s]}</span>
+    </div>`;
+  }).join('');
+  const active = Object.entries(counts).filter(([s,_]) => s !== 'completed').reduce((a,[_,n]) => a+n, 0);
+  host.innerHTML = `
+    <div class="chart-card">
+      <div class="chart-head">
+        <div class="chart-title">Active across stages</div>
+        <div class="chart-value">${active}<small>in flight</small></div>
+      </div>
+      ${rows}
+    </div>
+  `;
+}
+
+function renderChartDeptLoad() {
+  const host = document.getElementById('chartDeptLoad');
+  if (!host) return;
+  const counts = {};
+  DEPTS.forEach(d => counts[d] = 0);
+  for (const o of orders) {
+    if (o.status !== 'active' || o.fulfillmentStage === 'completed') continue;
+    for (const l of o.lines) {
+      if (l.stage !== 'prepared') counts[l.department]++;
+    }
+  }
+  const total = Object.values(counts).reduce((a,b) => a+b, 0);
+  const max = Math.max(1, ...Object.values(counts));
+  const deptColors = { grocery:'#86efac', meat:'#fca5a5', deli:'#fcd34d', bakery:'#d8b4fe', produce:'#6ee7b7' };
+  const rows = DEPTS.map(d => {
+    const pct = (counts[d] / max) * 100;
+    return `<div class="funnel-row">
+      <span class="funnel-label">${DEPT_ICONS[d]} ${DEPT_LABELS[d]}</span>
+      <div class="funnel-bar-wrap"><div class="funnel-bar" style="width:${pct}%;background:${deptColors[d]}"></div></div>
+      <span class="funnel-count">${counts[d]}</span>
+    </div>`;
+  }).join('');
+  host.innerHTML = `
+    <div class="chart-card">
+      <div class="chart-head">
+        <div class="chart-title">Open items per dept</div>
+        <div class="chart-value">${total}<small>items</small></div>
+      </div>
+      ${rows}
+    </div>
+  `;
+}
+
+// ============ ONBOARDING ============
+const ONBOARDING_KEY = 'hive:onboarded';
+const TOUR_STEPS = [
+  { selector: '#userRole', title: 'Pick your role', body: 'Switch between front desk, departments, drivers, and clerks. Each role lands on the stage that matters to them.', side: 'bottom' },
+  { selector: '#btnNew', title: 'Create orders here', body: 'New orders are captured here, then sit in Pending while emails go out to departments.', side: 'bottom' },
+  { selector: '#stageTabs', title: 'One stage at a time', body: 'Click any tab to focus on just those cards. The view stays clean and uncluttered.', side: 'bottom' },
+  { selector: '#btnStats', title: 'Visual dashboards', body: 'Open Stats for live charts: weekly volume, stage funnel, and dept load. Performance at a glance.', side: 'bottom' },
+  { selector: '#btnSettings', title: 'Configure recipients', body: 'Set who gets the auto-emails — front desk and each department. Add as many addresses as you need.', side: 'bottom' }
+];
+let tourStep = 0;
+
+function showWelcome() {
+  document.getElementById('welcomeMascot').innerHTML = mascotSVG();
+  document.getElementById('welcomeOverlay').classList.add('open');
+}
+function hideWelcome() { document.getElementById('welcomeOverlay').classList.remove('open'); }
+function markOnboarded() { localStorage.setItem(ONBOARDING_KEY, '1'); }
+
+function startTour() {
+  hideWelcome();
+  tourStep = 0;
+  document.getElementById('tourOverlay').classList.add('open');
+  showTourStep();
+}
+function endTour() {
+  document.getElementById('tourOverlay').classList.remove('open');
+  markOnboarded();
+  toast({ icon:'🐝', title:'Welcome to the hive', sub:'Open Stats or create an order whenever you\'re ready.', type:'success' });
+}
+function showTourStep() {
+  const step = TOUR_STEPS[tourStep];
+  if (!step) return endTour();
+  const target = document.querySelector(step.selector);
+  if (!target) { tourStep++; return showTourStep(); }
+  const rect = target.getBoundingClientRect();
+  const pad = 8;
+  const x = Math.max(0, rect.left - pad), y = Math.max(0, rect.top - pad);
+  const w = rect.width + pad*2, h = rect.height + pad*2;
+  const shade = document.getElementById('tourShade');
+  // Cut a rounded rectangle out of the shade using clip-path's evenodd rule
+  const W = window.innerWidth, H = window.innerHeight;
+  shade.style.clipPath = `polygon(
+    0% 0%, 0% 100%, 100% 100%, 100% 0%, 0% 0%,
+    ${x}px ${y}px,
+    ${x}px ${y+h}px,
+    ${x+w}px ${y+h}px,
+    ${x+w}px ${y}px,
+    ${x}px ${y}px
+  )`;
+  // Tooltip placement
+  const tip = document.getElementById('tourTooltip');
+  document.getElementById('tourStepNum').textContent = `Step ${tourStep+1} of ${TOUR_STEPS.length}`;
+  document.getElementById('tourTitle').textContent = step.title;
+  document.getElementById('tourBody').textContent = step.body;
+  const progEl = document.getElementById('tourProgress');
+  progEl.innerHTML = TOUR_STEPS.map((_, i) => `<div class="tour-dot ${i === tourStep ? 'active' : ''}"></div>`).join('');
+  document.getElementById('tourPrev').style.visibility = tourStep === 0 ? 'hidden' : 'visible';
+  document.getElementById('tourNext').textContent = tourStep === TOUR_STEPS.length - 1 ? 'Done ✓' : 'Next →';
+
+  // Position tooltip below the target by default
+  const tipH = 200;
+  let top = y + h + 12;
+  if (top + tipH > H) top = Math.max(12, y - tipH - 12);
+  let left = Math.max(12, Math.min(W - 340, x));
+  tip.style.top = top + 'px';
+  tip.style.left = left + 'px';
+}
+document.getElementById('startTourBtn').onclick = startTour;
+document.getElementById('skipTourBtn').onclick = () => { hideWelcome(); markOnboarded(); };
+document.getElementById('tourPrev').onclick = () => { tourStep = Math.max(0, tourStep - 1); showTourStep(); };
+document.getElementById('tourNext').onclick = () => { tourStep++; if (tourStep >= TOUR_STEPS.length) endTour(); else showTourStep(); };
+window.addEventListener('resize', () => { if (document.getElementById('tourOverlay').classList.contains('open')) showTourStep(); });
+
+// Install logo SVG once
+document.getElementById('logoMark').innerHTML = logoSVG();
+
+// ============ AUTH / LOGIN (Firebase) ============
+let loginMode = 'signin'; // 'signin' or 'bootstrap'
+let authInitialized = false;
+
+async function showLogin() {
+  document.getElementById('loginMascot').innerHTML = mascotSVG();
+  document.getElementById('loginOverlay').classList.add('open');
+  document.getElementById('loginPassword').value = '';
+  // Check the public bootstrap flag — anyone can read /config/bootstrap
+  let bootstrapDone = false;
+  try {
+    const bs = await getDoc(doc(db, 'config', 'bootstrap'));
+    bootstrapDone = bs.exists() && bs.data()?.done === true;
+  } catch { /* fall through — treat as not bootstrapped */ }
+  if (bootstrapDone) {
+    // Normal state — hide the bootstrap tab entirely
+    document.getElementById('loginTabs').style.display = 'none';
+    switchLoginMode('signin');
+    document.getElementById('loginSub').textContent = 'Sign in with your work email.';
+  } else {
+    document.getElementById('loginTabs').style.display = '';
+    switchLoginMode('bootstrap');
+    document.getElementById('loginSub').textContent = 'No accounts yet — create the first admin.';
+  }
+}
+
+function switchLoginMode(mode) {
+  loginMode = mode;
+  document.querySelectorAll('.login-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === mode));
+  document.getElementById('loginNameField').style.display = mode === 'bootstrap' ? '' : 'none';
+  document.getElementById('loginBtn').textContent = mode === 'bootstrap' ? 'Create admin account →' : 'Sign in →';
+  document.getElementById('loginBtn').disabled = false;
+  document.getElementById('loginHint').textContent = mode === 'bootstrap'
+    ? 'This account will have full admin access.'
+    : 'Enter your credentials.';
+  // Do NOT clear the error here — a "no role assigned" message from the auth listener
+  // needs to survive the subsequent showLogin() call. Errors are cleared only when
+  // the user starts a fresh sign-in attempt in doLogin().
+}
+
+function hideLogin() { document.getElementById('loginOverlay').classList.remove('open'); }
+
+function showLoginError(msg) {
+  const el = document.getElementById('loginError');
+  el.textContent = msg; el.style.display = '';
+}
+
+function translateFirebaseError(err) {
+  const code = err?.code || '';
+  if (code === 'auth/invalid-credential' || code === 'auth/wrong-password' || code === 'auth/user-not-found') return 'Wrong email or password.';
+  if (code === 'auth/email-already-in-use') return 'That email already has an account.';
+  if (code === 'auth/weak-password') return 'Password too weak (min 6 characters).';
+  if (code === 'auth/invalid-email') return 'That doesn\'t look like a valid email.';
+  if (code === 'auth/too-many-requests') return 'Too many attempts. Try again in a moment.';
+  return err.message || 'Something went wrong.';
+}
+
+async function doLogin(e) {
+  if (e) e.preventDefault();
+  document.getElementById('loginError').style.display = 'none'; // fresh attempt — clear any prior error
+  const email = document.getElementById('loginEmail').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  const name = document.getElementById('loginNameInput').value.trim();
+  const btn = document.getElementById('loginBtn');
+  btn.disabled = true;
+  const originalLabel = btn.textContent;
+  btn.textContent = 'Working…';
+
+  try {
+    if (loginMode === 'bootstrap') {
+      if (!name) throw new Error('Please enter your name.');
+      let cred;
+      try {
+        cred = await createUserWithEmailAndPassword(auth, email, password);
+      } catch (err) {
+        // Recover from a half-created bootstrap: auth account exists but /users doc missing
+        if (err.code === 'auth/email-already-in-use') {
+          cred = await signInWithEmailAndPassword(auth, email, password);
+        } else { throw err; }
+      }
+      if (name) { try { await updateProfile(cred.user, { displayName: name }); } catch {} }
+      await setDoc(doc(db, 'users', cred.user.uid), {
+        email, name, role: 'admin', active: true, createdAt: serverTimestamp()
+      });
+      // Mark the hive as bootstrapped so future visits skip this tab
+      await setDoc(doc(db, 'config', 'bootstrap'), {
+        done: true, adminUid: cred.user.uid, adminEmail: email, at: serverTimestamp()
+      });
+      // onAuthStateChanged handles the rest
+    } else {
+      await signInWithEmailAndPassword(auth, email, password);
+    }
+  } catch (err) {
+    console.error(err);
+    showLoginError(translateFirebaseError(err));
+    btn.disabled = false; btn.textContent = originalLabel;
+  }
+}
+
+async function doLogout() {
+  await signOut(auth);
+  authInitialized = false;
+  // onAuthStateChanged handles cleanup
+}
+
+// Fetch the user's Firestore profile to get their role
+async function loadUserProfile(fbUser) {
+  const snap = await getDoc(doc(db, 'users', fbUser.uid));
+  if (!snap.exists()) return null;
+  const data = snap.data();
+  if (data.active === false) return null;
+  return {
+    uid: fbUser.uid, email: fbUser.email,
+    name: data.name || fbUser.displayName || fbUser.email,
+    role: data.role
+  };
+}
+
+// Wire form + tabs
+document.getElementById('loginForm').addEventListener('submit', doLogin);
+document.querySelectorAll('.login-tab').forEach(t => { t.onclick = () => switchLoginMode(t.dataset.tab); });
+
+// ============ MANAGE USERS (admin) ============
+let _unsubUsers = null;
+let usersList = [];
+
+function subscribeUsers() {
+  if (_unsubUsers) return;
+  _unsubUsers = onSnapshot(collection(db, 'users'), (snap) => {
+    usersList = snap.docs.map(d => ({ uid: d.id, ...d.data() }));
+    renderUsersList();
+  }, (err) => console.warn('users subscribe error', err));
+}
+function unsubscribeUsers() {
+  if (_unsubUsers) { _unsubUsers(); _unsubUsers = null; }
+  usersList = [];
+}
+
+function renderUsersList() {
+  const list = document.getElementById('usersList');
+  if (!list) return;
+  if (usersList.length === 0) {
+    list.innerHTML = '<div class="empty-state" style="padding:30px 10px"><div class="empty-title" style="font-size:15px">No users yet</div><div class="empty-sub" style="font-size:12px">Click "Add user" to get started.</div></div>';
+    return;
+  }
+  const sorted = [...usersList].sort((a,b) => (a.name || '').localeCompare(b.name || ''));
+  list.innerHTML = sorted.map(u => {
+    const roleDef = ROLES[u.role] || {};
+    const isMe = u.uid === currentUser?.uid;
+    const roleOptions = Object.entries(ROLES).map(([id, r]) =>
+      `<option value="${id}" ${id === u.role ? 'selected' : ''}>${r.icon} ${r.label}</option>`
+    ).join('');
+    return `<div class="user-row ${u.active === false ? 'inactive' : ''}" style="--role-tint:${roleDef.tint || '#f59e0b'}">
+      <div>
+        <div class="user-row-name">${roleDef.icon || ''} ${escapeHtml(u.name || u.email)}${isMe ? '<span class="user-row-you">YOU</span>' : ''}</div>
+        <div class="user-row-email">${escapeHtml(u.email || '')}</div>
+        <select class="modal-line-stage-select" data-role-change="${u.uid}" style="margin-top:6px" ${isMe ? 'disabled' : ''}>${roleOptions}</select>
+      </div>
+      <div class="user-row-actions">
+        ${isMe ? '' : `<button class="btn small" data-toggle-active="${u.uid}" data-active="${u.active !== false}">${u.active === false ? 'Activate' : 'Deactivate'}</button>`}
+        ${isMe ? '' : `<button class="btn small danger-ghost" data-delete-user="${u.uid}">Delete</button>`}
+      </div>
+    </div>`;
+  }).join('');
+
+  list.querySelectorAll('[data-role-change]').forEach(sel => {
+    sel.onchange = async (e) => {
+      const uid = sel.dataset.roleChange;
+      try { await updateDoc(doc(db, 'users', uid), { role: e.target.value }); toast({ icon:'✎', title:'Role updated', type:'success' }); }
+      catch (err) { toast({ icon:'⚠', title:'Failed', sub: err.message, type:'warn' }); }
+    };
+  });
+  list.querySelectorAll('[data-toggle-active]').forEach(btn => {
+    btn.onclick = async () => {
+      const uid = btn.dataset.toggleActive;
+      const wasActive = btn.dataset.active === 'true';
+      try { await updateDoc(doc(db, 'users', uid), { active: !wasActive }); toast({ icon:'✎', title: wasActive ? 'User deactivated' : 'User reactivated', type:'success' }); }
+      catch (err) { toast({ icon:'⚠', title:'Failed', sub: err.message, type:'warn' }); }
+    };
+  });
+  list.querySelectorAll('[data-delete-user]').forEach(btn => {
+    btn.onclick = async () => {
+      const uid = btn.dataset.deleteUser;
+      const u = usersList.find(x => x.uid === uid);
+      if (!confirm(`Delete ${u?.name || u?.email}? Their sign-in still works until you remove it from Firebase Auth in the console.`)) return;
+      try { await deleteDoc(doc(db, 'users', uid)); toast({ icon:'🗑', title:'User removed', sub:'Remember to also delete their Auth account in Firebase Console.', type:'success', duration:7000 }); }
+      catch (err) { toast({ icon:'⚠', title:'Failed', sub: err.message, type:'warn' }); }
+    };
+  });
+}
+
+function populateRoleSelect() {
+  const sel = document.querySelector('#addUserForm [name="userRole"]');
+  if (!sel) return;
+  sel.innerHTML = Object.entries(ROLES).filter(([id]) => id !== 'admin').map(([id, r]) =>
+    `<option value="${id}">${r.icon} ${r.label}</option>`
+  ).join('') + '<option value="admin">👑 Admin (full access)</option>';
+}
+
+document.getElementById('btnAddUser').onclick = () => {
+  const form = document.getElementById('addUserForm');
+  form.style.display = '';
+  populateRoleSelect();
+  form.querySelector('[name="userName"]').focus();
+};
+document.getElementById('btnAddUserCancel').onclick = () => {
+  document.getElementById('addUserForm').style.display = 'none';
+  document.getElementById('addUserForm').reset();
+  document.getElementById('addUserError').style.display = 'none';
+};
+document.getElementById('addUserForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  const name = fd.get('userName').trim();
+  const email = fd.get('userEmail').trim();
+  const password = fd.get('userPassword');
+  const role = fd.get('userRole');
+  const errEl = document.getElementById('addUserError');
+  errEl.style.display = 'none';
+  const submitBtn = e.target.querySelector('button[type="submit"]');
+  submitBtn.disabled = true; submitBtn.textContent = 'Creating…';
+  try {
+    let uid;
+    try {
+      // Use the secondary auth instance so the current admin session is preserved
+      const cred = await createUserWithEmailAndPassword(authSecondary, email, password);
+      try { await updateProfile(cred.user, { displayName: name }); } catch {}
+      uid = cred.user.uid;
+    } catch (err) {
+      // Orphan Auth account with no /users doc — sign in with the provided password and link the role.
+      // If the admin's password guess is wrong we surface the auth error normally.
+      if (err.code === 'auth/email-already-in-use') {
+        const cred = await signInWithEmailAndPassword(authSecondary, email, password);
+        try { await updateProfile(cred.user, { displayName: name }); } catch {}
+        uid = cred.user.uid;
+      } else { throw err; }
+    }
+    await setDoc(doc(db, 'users', uid), {
+      email, name, role, active: true, createdAt: serverTimestamp(), createdBy: currentUser.uid
+    });
+    await signOut(authSecondary);
+    toast({ icon: ROLES[role]?.icon || '👤', title: `${name} added`, sub: `${ROLES[role]?.label || role} · ${email}`, type: 'success' });
+    e.target.reset();
+    document.getElementById('addUserForm').style.display = 'none';
+  } catch (err) {
+    console.error(err);
+    errEl.textContent = translateFirebaseError(err);
+    errEl.style.display = '';
+  } finally {
+    submitBtn.disabled = false; submitBtn.textContent = 'Create user';
+  }
+});
+
+document.getElementById('btnUsers').onclick = () => { openDrawer('drawerUsers'); };
+
+function applyRolePermissions() {
+  const chip = document.getElementById('userChip');
+  const roleSelector = document.getElementById('userRole');
+  const btnNew = document.getElementById('btnNew');
+  const btnSettings = document.getElementById('btnSettings');
+  const stageTabsWrap = document.querySelector('.stage-tabs-wrap');
+  const toolbar = document.querySelector('.toolbar');
+
+  if (!currentUser) {
+    chip.style.display = 'none';
+    roleSelector.style.display = '';
+    return;
+  }
+  const info = roleInfo();
+  chip.style.display = '';
+  chip.style.setProperty('--role-tint', info.tint);
+  document.getElementById('userChipIcon').textContent = info.icon;
+  document.getElementById('userChipText').textContent = currentUser.name;
+  // Only admin can use the view-as debug selector
+  roleSelector.style.display = isAdmin() ? '' : 'none';
+  // Only admin + frontend can create orders
+  btnNew.style.display = info.canCreate ? '' : 'none';
+  // Only admin can configure emails and manage users
+  btnSettings.style.display = info.canConfig ? '' : 'none';
+  const btnUsers = document.getElementById('btnUsers');
+  if (btnUsers) btnUsers.style.display = info.canConfig ? '' : 'none';
+  // Mobile nav: + button follows the same create permission; pending is Front Desk/Admin only
+  const mnavNew = document.querySelector('.mnav-new');
+  if (mnavNew) mnavNew.style.display = info.canCreate ? '' : 'none';
+  const mnavPendingBtn = document.querySelector('[data-mnav="pending"]');
+  if (mnavPendingBtn) mnavPendingBtn.style.display = canStartOrders() ? '' : 'none';
+  // Drivers/clerks live in pick-and-deliver land — hide the prep stages entirely
+  const hidePrepTabs = !!info.pickupTime;
+  document.querySelectorAll('.stage-tab').forEach(t => {
+    const s = t.dataset.stageTab;
+    t.style.display = (hidePrepTabs && (s === 'received' || s === 'acknowledged')) ? 'none' : '';
+  });
+  if (hidePrepTabs && ['received', 'acknowledged'].includes(currentStage)) {
+    currentStage = 'prepared';
+    localStorage.setItem(STAGE_KEY, currentStage);
+  }
+  // Update rail title based on role
+  const railTitle = document.getElementById('railTitle');
+  if (railTitle) {
+    if (canSeeAll()) railTitle.textContent = '📥 Inbox';
+    else if (scopeDept()) railTitle.textContent = `${info.icon} ${info.label} inbox`;
+    else if (scopeFulfillment() === 'delivery') railTitle.textContent = '🚚 To deliver';
+    else if (scopeFulfillment() === 'pickup') railTitle.textContent = '🛍 To hand off';
+    else railTitle.textContent = '📥 Inbox';
+  }
+}
+
+document.getElementById('btnLogout').onclick = doLogout;
+
+// ============ LEFT RAIL — ENVELOPES ============
+function renderRail() {
+  const stack = document.getElementById('envelopeStack');
+  const countEl = document.getElementById('railCount');
+  if (!stack) return;
+
+  // Front End / Admin: per-department "waiting to be accepted" mini-windows
+  const alertsEl = document.getElementById('deptAlerts');
+  if (alertsEl) {
+    const entries = canSeeAll() ? Object.entries(deptWaitingStats()) : [];
+    if (entries.length) {
+      alertsEl.style.display = '';
+      alertsEl.innerHTML = entries.map(([d, s]) => `
+        <div class="dept-alert ${s.urgent ? 'urgent' : ''}" data-dept-alert="${d}" title="Jump to Received">
+          <span>${DEPT_ICONS[d]}</span>
+          <span>${DEPT_LABELS[d]} order${s.count === 1 ? '' : 's'} waiting${s.urgent ? ' — due <12h!' : ''}</span>
+          <span class="da-count">${s.count}</span>
+        </div>`).join('');
+      alertsEl.querySelectorAll('[data-dept-alert]').forEach(el => {
+        el.onclick = () => switchStage('received');
+      });
+    } else {
+      alertsEl.style.display = 'none';
+      alertsEl.innerHTML = '';
+    }
+  }
+  // Which orders belong in the rail? Anything visible to this user that's not yet completed.
+  const items = orders.filter(o => o.status === 'active' && passesFilters(o) && o.fulfillmentStage !== 'completed');
+  countEl.textContent = items.length;
+  const mnavInbox = document.getElementById('mnavInboxCount');
+  if (mnavInbox) {
+    mnavInbox.style.display = items.length ? '' : 'none';
+    mnavInbox.textContent = items.length;
+  }
+  if (items.length === 0) {
+    stack.innerHTML = `<div class="envelope-empty">🐝 The hive is quiet.<br>New orders will drop in here.</div>`;
+    return;
+  }
+  // Newest first, so drop-in appears at top and previous letters visually stack below
+  stack.innerHTML = items.slice(0, 12).map(o => envelopeHTML(o)).join('');
+  stack.querySelectorAll('[data-envelope]').forEach(el => {
+    el.onclick = () => {
+      const id = el.dataset.envelope;
+      const o = orders.find(x => x.id === id); if (!o) return;
+      // Play the "opening" animation, then jump the center to that order's stage
+      el.classList.add('opening');
+      setTimeout(() => {
+        closeDrawers(); // also collapses the mobile inbox sheet
+        const stage = orderDisplayStage(o, scopeDept() || userDept());
+        if (stage) switchStage(stage);
+        flashCard(id);
+      }, 260);
+    };
+  });
+}
+function envelopeHTML(o) {
+  const scope = scopeDept();
+  const linesForMe = scope ? o.lines.filter(l => l.department === scope) : o.lines;
+  const depts = [...new Set(linesForMe.map(l => l.department))];
+  const totalItems = linesForMe.length;
+  const stage = orderDisplayStage(o, scope || userDept());
+  const stageLabel = STAGE_LABELS[stage] || '';
+  const stageIcon = STAGE_ICONS[stage] || '';
+  const created = o.timestamps.received ? fmtDate(o.timestamps.received) : '—';
+  const dotColors = { grocery:'#166534', meat:'#991b1b', deli:'#92400e', bakery:'#6b21a8', produce:'#065f46' };
+  const dotsHtml = depts.map(d => `<span class="envelope-dept-dot" style="background:${dotColors[d]}" title="${DEPT_LABELS[d]}"></span>`).join('');
+  return `<div class="envelope ${o.priority ? 'envelope-priority' : ''}" data-envelope="${o.id}">
+    <div class="envelope-seal"></div>
+    <div class="envelope-customer">${escapeHtml(o.customerName)}</div>
+    <div class="envelope-meta">${dotsHtml}<span>${totalItems} item${totalItems===1?'':'s'}</span><span>${o.fulfillment === 'delivery' ? '🚚' : '🛍'}</span></div>
+    <div class="envelope-stage-strip">
+      <span>${stageIcon} ${stageLabel}</span>
+      <span class="envelope-postmark">${created}</span>
+    </div>
+  </div>`;
+}
+// Auth state listener — the source of truth for currentUser
+onAuthStateChanged(auth, async (fbUser) => {
+  if (fbUser) {
+    const profile = await loadUserProfile(fbUser);
+    if (!profile) {
+      await signOut(auth);
+      showLoginError('Your account has no role assigned (or is deactivated). Ask the admin.');
+      toast({ icon:'⚠', title:'No role assigned', sub:`${fbUser.email} — admin needs to create your profile.`, type:'warn', duration:8000 });
+      showLogin();
+      return;
+    }
+    currentUser = profile;
+    // Backfill the public bootstrap flag if this is an admin session and it's missing
+    if (profile.role === 'admin') {
+      try {
+        const bs = await getDoc(doc(db, 'config', 'bootstrap'));
+        if (!bs.exists()) {
+          await setDoc(doc(db, 'config', 'bootstrap'), {
+            done: true, adminUid: profile.uid, adminEmail: profile.email, at: serverTimestamp()
+          });
+        }
+      } catch (e) { console.warn('bootstrap backfill', e); }
+    }
+    subscribeOrders();
+    if (profile.role === 'admin') subscribeUsers();
+    hideLogin();
+    applyRolePermissions();
+    render();
+    if (!authInitialized) {
+      authInitialized = true;
+      toast({
+        icon: ROLES[profile.role]?.icon || '🐝',
+        title: `Welcome, ${escapeHtml(profile.name)}`,
+        sub: `Signed in as ${ROLES[profile.role]?.label || profile.role}`,
+        type: 'success'
+      });
+      if (!localStorage.getItem(ONBOARDING_KEY)) setTimeout(showWelcome, 500);
+    }
+  } else {
+    unsubscribeOrders();
+    unsubscribeUsers();
+    currentUser = null;
+    applyRolePermissions();
+    showLogin();
+  }
+});
+
+Object.assign(window, {
+  togglePriority, deleteOrder, regressLine, setLineStage,
+  enterEditMode, startPicking, openPickList, completePickAndStart,
+  completeOrder, exitPickMode, switchStage, openDrawer,
+  startOrder, cancelPending, showWelcome, startTour
+});
+</script>
+</body>
+</html>
