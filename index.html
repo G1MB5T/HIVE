@@ -4,6 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="description" content="HIVE — co-op order management dashboard">
+<meta name="theme-color" content="#14110d">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="HIVE">
 <title>HIVE — Order Management</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -4068,6 +4075,14 @@ Object.assign(window, {
   completeOrder, exitPickMode, switchStage, openDrawer,
   startOrder, cancelPending, showWelcome, startTour
 });
+</script>
+<script>
+// PWA: register the service worker (https/localhost only — skipped when opened as a local file)
+if ('serviceWorker' in navigator && location.protocol.indexOf('http') === 0) {
+  window.addEventListener('load', function () {
+    navigator.serviceWorker.register('./sw.js').catch(function (e) { console.warn('SW registration failed', e); });
+  });
+}
 </script>
 </body>
 </html>
