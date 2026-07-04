@@ -1323,6 +1323,13 @@
   .stage-header h1 { font-family: 'Fraunces', serif; letter-spacing: -0.015em; }
   .welcome-card .btn.primary, .welcome-card .btn.ghost { padding: 12px 20px; font-size: 13px; }
 
+  /* ============ ICON SYSTEM ============ */
+  .ic { display: inline-block; vertical-align: -0.18em; flex-shrink: 0; }
+  [data-ic] { display: inline-flex; align-items: center; }
+  .stage-tab [data-ic] { margin-right: 1px; }
+  .drawer-title [data-ic] { color: var(--honey-light); }
+  .mobile-nav [data-ic] { display: flex; }
+
   /* ============ MOBILE NAV (hidden on desktop) ============ */
   .mobile-nav { display: none; }
 
@@ -1483,13 +1490,13 @@
         <option value="clerk">🛍 Clerk</option>
       </optgroup>
     </select>
-    <button class="header-btn primary" id="btnNew">+ New Order</button>
-    <button class="header-btn" id="btnPending" title="Pending orders" style="display:none">📥 <span id="pendingLabel">Pending</span><span class="badge" id="pendingBadge">0</span></button>
-    <button class="header-btn" id="btnStats" title="Stats & departments">📊</button>
-    <button class="header-btn" id="btnHistory" title="History">📋</button>
-    <button class="header-btn" id="btnUsers" title="Manage users" style="display:none">👥</button>
-    <button class="header-btn" id="btnSettings" title="Email settings">⚙</button>
-    <button class="header-btn" id="themeToggle" title="Toggle theme">🌓</button>
+    <button class="header-btn primary" id="btnNew"><span data-ic="plus" data-ic-size="15"></span> New Order</button>
+    <button class="header-btn" id="btnPending" title="Pending orders" style="display:none"><span data-ic="mail" data-ic-size="15"></span> <span id="pendingLabel">Pending</span><span class="badge" id="pendingBadge">0</span></button>
+    <button class="header-btn" id="btnStats" title="Stats & departments"><span data-ic="chart" data-ic-size="16"></span></button>
+    <button class="header-btn" id="btnHistory" title="History"><span data-ic="clock" data-ic-size="16"></span></button>
+    <button class="header-btn" id="btnUsers" title="Manage users" style="display:none"><span data-ic="users" data-ic-size="16"></span></button>
+    <button class="header-btn" id="btnSettings" title="Email settings"><span data-ic="sliders" data-ic-size="16"></span></button>
+    <button class="header-btn" id="themeToggle" title="Toggle theme"></button>
     <div class="quick-metrics">
       <div class="qm"><div class="qm-num" id="mTotal">0</div><div class="qm-lbl">Today</div></div>
       <div class="qm"><div class="qm-num" id="mActive">0</div><div class="qm-lbl">Active</div></div>
@@ -1500,12 +1507,12 @@
 
 <div class="stage-tabs-wrap">
   <div class="stage-tabs" id="stageTabs">
-    <button class="stage-tab received"     data-stage-tab="received">📨 Received <span class="count">0</span></button>
-    <button class="stage-tab acknowledged" data-stage-tab="acknowledged">👁 Acknowledged <span class="count">0</span></button>
-    <button class="stage-tab prepared"     data-stage-tab="prepared">📦 Prepared <span class="count">0</span></button>
-    <button class="stage-tab picking"      data-stage-tab="picking">🛒 Picking <span class="count">0</span></button>
-    <button class="stage-tab enroute"      data-stage-tab="enroute">🚚 En Route <span class="count">0</span></button>
-    <button class="stage-tab completed"    data-stage-tab="completed">✓ Completed <span class="count">0</span></button>
+    <button class="stage-tab received"     data-stage-tab="received"><span data-ic="inbox" data-ic-size="15"></span> Received <span class="count">0</span></button>
+    <button class="stage-tab acknowledged" data-stage-tab="acknowledged"><span data-ic="eye" data-ic-size="15"></span> Acknowledged <span class="count">0</span></button>
+    <button class="stage-tab prepared"     data-stage-tab="prepared"><span data-ic="package" data-ic-size="15"></span> Prepared <span class="count">0</span></button>
+    <button class="stage-tab picking"      data-stage-tab="picking"><span data-ic="cart" data-ic-size="15"></span> Picking <span class="count">0</span></button>
+    <button class="stage-tab enroute"      data-stage-tab="enroute"><span data-ic="truck" data-ic-size="15"></span> En Route <span class="count">0</span></button>
+    <button class="stage-tab completed"    data-stage-tab="completed"><span data-ic="check" data-ic-size="15"></span> Completed <span class="count">0</span></button>
   </div>
 </div>
 
@@ -1517,10 +1524,10 @@
 </aside>
 <div class="workspace-center">
 <div class="toolbar">
-  <input class="search" id="searchInput" placeholder="🔍 Search by customer, item, contact, co-op #…">
-  <button class="filter-pill" data-filter="priority">🚨 Priority</button>
-  <button class="filter-pill" data-filter="pickup">🛍 Pickup</button>
-  <button class="filter-pill" data-filter="delivery">🚚 Delivery</button>
+  <input class="search" id="searchInput" placeholder="Search customer, item, contact, co-op #…">
+  <button class="filter-pill" data-filter="priority"><span data-ic="alert" data-ic-size="13"></span> Priority</button>
+  <button class="filter-pill" data-filter="pickup"><span data-ic="bag" data-ic-size="13"></span> Pickup</button>
+  <button class="filter-pill" data-filter="delivery"><span data-ic="truck" data-ic-size="13"></span> Delivery</button>
   <select id="dateFilter">
     <option value="all">All time</option>
     <option value="today">Today</option>
@@ -1548,7 +1555,7 @@
 
 <aside class="drawer" id="drawerNew">
   <div class="drawer-header">
-    <div class="drawer-title">📝 New Order</div>
+    <div class="drawer-title"><span data-ic="plus" data-ic-size="18"></span> New Order</div>
     <button class="drawer-close" data-close-drawer>×</button>
   </div>
   <form id="orderForm" autocomplete="off">
@@ -1598,7 +1605,7 @@
 
 <aside class="drawer" id="drawerPending">
   <div class="drawer-header">
-    <div class="drawer-title">📥 Pending Orders</div>
+    <div class="drawer-title"><span data-ic="mail" data-ic-size="18"></span> Pending Orders</div>
     <button class="drawer-close" data-close-drawer>×</button>
   </div>
   <p style="font-size:12px;color:var(--muted);margin-bottom:14px">Orders sit here after creation. Emails have gone out. Click <strong>Start Order</strong> once departments are ready — the order then enters the workflow and the timer begins.</p>
@@ -1607,7 +1614,7 @@
 
 <aside class="drawer" id="drawerStats">
   <div class="drawer-header">
-    <div class="drawer-title">📊 Stats & Departments</div>
+    <div class="drawer-title"><span data-ic="chart" data-ic-size="18"></span> Stats & Departments</div>
     <button class="drawer-close" data-close-drawer>×</button>
   </div>
   <div class="section-title">Departments</div>
@@ -1624,7 +1631,7 @@
 
 <aside class="drawer" id="drawerHistory">
   <div class="drawer-header">
-    <div class="drawer-title">📋 Order History</div>
+    <div class="drawer-title"><span data-ic="clock" data-ic-size="18"></span> Order History</div>
     <button class="drawer-close" data-close-drawer>×</button>
   </div>
   <div id="historyList"></div>
@@ -1632,7 +1639,7 @@
 
 <aside class="drawer" id="drawerUsers">
   <div class="drawer-header">
-    <div class="drawer-title">👥 Manage Users</div>
+    <div class="drawer-title"><span data-ic="users" data-ic-size="18"></span> Manage Users</div>
     <button class="drawer-close" data-close-drawer>×</button>
   </div>
   <p style="font-size:12px;color:var(--muted);margin-bottom:14px">Create accounts for each department + front desk. Each account gets an email + password to sign in with, and a role that scopes what they see.</p>
@@ -1653,7 +1660,7 @@
 
 <aside class="drawer" id="drawerSettings">
   <div class="drawer-header">
-    <div class="drawer-title">⚙ Email Settings</div>
+    <div class="drawer-title"><span data-ic="sliders" data-ic-size="18"></span> Email Settings</div>
     <button class="drawer-close" data-close-drawer>×</button>
   </div>
   <p style="font-size:12px;color:var(--muted);margin-bottom:14px">Recipients for automatic order emails. When an order is created, both Front Desk addresses are CC'd plus each department that has items in the order.</p>
@@ -1714,11 +1721,11 @@
 </div>
 
 <nav class="mobile-nav" id="mobileNav">
-  <button data-mnav="inbox" title="Inbox">📥<span>Inbox</span><b class="mnav-badge" id="mnavInboxCount" style="display:none">0</b></button>
-  <button data-mnav="stats" title="Stats">📊<span>Stats</span></button>
-  <button class="mnav-new" data-mnav="new" title="New order">＋</button>
-  <button data-mnav="pending" title="Pending">✉<span>Pending</span><b class="mnav-badge" id="mnavPendingCount" style="display:none">0</b></button>
-  <button data-mnav="history" title="History">📋<span>History</span></button>
+  <button data-mnav="inbox" title="Inbox"><span data-ic="inbox" data-ic-size="20"></span><span>Inbox</span><b class="mnav-badge" id="mnavInboxCount" style="display:none">0</b></button>
+  <button data-mnav="stats" title="Stats"><span data-ic="chart" data-ic-size="20"></span><span>Stats</span></button>
+  <button class="mnav-new" data-mnav="new" title="New order"><span data-ic="plus" data-ic-size="26"></span></button>
+  <button data-mnav="pending" title="Pending"><span data-ic="mail" data-ic-size="20"></span><span>Pending</span><b class="mnav-badge" id="mnavPendingCount" style="display:none">0</b></button>
+  <button data-mnav="history" title="History"><span data-ic="clock" data-ic-size="20"></span><span>History</span></button>
 </nav>
 
 <div class="flash-overlay" id="flashOverlay"></div>
@@ -1761,9 +1768,41 @@ const STAGE_LABELS = {
   received: 'Received', acknowledged: 'Acknowledged', prepared: 'Prepared',
   picking: 'Picking', enroute: 'En Route', completed: 'Completed'
 };
+// ============ ICON SYSTEM (crisp stroke icons, replaces emoji chrome) ============
+const ICONS = {
+  inbox:   '<polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/>',
+  eye:     '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/>',
+  package: '<path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/>',
+  cart:    '<circle cx="9" cy="21" r="1.6"/><circle cx="18" cy="21" r="1.6"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/>',
+  truck:   '<path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"/><path d="M15 18H9"/><path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.62l-3.48-4.35A1 1 0 0 0 17.52 8H14"/><circle cx="7" cy="18" r="2"/><circle cx="17" cy="18" r="2"/>',
+  check:   '<circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/>',
+  plus:    '<path d="M12 5v14"/><path d="M5 12h14"/>',
+  mail:    '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/>',
+  chart:   '<path d="M3 3v18h18"/><path d="M8 17v-6"/><path d="M13 17V7"/><path d="M18 17v-4"/>',
+  clock:   '<circle cx="12" cy="12" r="10"/><path d="M12 7v5l3 2"/>',
+  users:   '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+  sliders: '<path d="M4 21v-7"/><path d="M4 10V3"/><path d="M12 21v-9"/><path d="M12 8V3"/><path d="M20 21v-5"/><path d="M20 12V3"/><path d="M1 14h6"/><path d="M9 8h6"/><path d="M17 16h6"/>',
+  moon:    '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>',
+  sun:     '<circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/>',
+  alert:   '<path d="m21.73 18-8-14a2 2 0 0 0-3.46 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3z"/><path d="M12 9v4"/><path d="M12 17h.01"/>',
+  bag:     '<path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/>'
+};
+function ic(name, size = 16) {
+  return `<svg class="ic" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[name] || ''}</svg>`;
+}
+function initStaticIcons() {
+  document.querySelectorAll('[data-ic]').forEach(el => {
+    el.innerHTML = ic(el.dataset.ic, parseInt(el.dataset.icSize || '16'));
+  });
+}
+
+const STAGE_ICON_NAMES = {
+  received: 'inbox', acknowledged: 'eye', prepared: 'package',
+  picking: 'cart', enroute: 'truck', completed: 'check'
+};
 const STAGE_ICONS = {
-  received: '📨', acknowledged: '👁', prepared: '📦',
-  picking: '🛒', enroute: '🚚', completed: '✓'
+  received: ic('inbox', 15), acknowledged: ic('eye', 15), prepared: ic('package', 15),
+  picking: ic('cart', 15), enroute: ic('truck', 15), completed: ic('check', 15)
 };
 const STAGE_SUBTITLES = {
   received: 'Orders started — waiting for departments to acknowledge.',
@@ -2465,27 +2504,27 @@ function renderCard(o) {
   let primaryAction = '';
   if (isCompleted) {
     const total = fmtDuration(new Date(o.timestamps.completed) - new Date(o.timestamps.received));
-    primaryAction = statusChip(`✓ Completed in ${total}`, 'var(--green)');
+    primaryAction = statusChip(`${ic('check', 14)} Completed in ${total}`, 'var(--green)');
   } else if (isEnRoute) {
     if (canPick()) {
-      const label = o.fulfillment === 'delivery' ? '✓ Mark Delivered' : '✓ Mark Picked Up';
+      const label = o.fulfillment === 'delivery' ? `${ic('check', 14)} Mark Delivered` : `${ic('check', 14)} Mark Picked Up`;
       primaryAction = `<button class="btn success" data-act="complete" data-order="${o.id}">${label}</button>`;
     } else {
-      primaryAction = statusChip(o.fulfillment === 'delivery' ? '🚚 Out for delivery' : '🛍 Ready for customer', 'var(--teal)');
+      primaryAction = statusChip(o.fulfillment === 'delivery' ? `${ic('truck', 14)} Out for delivery` : `${ic('bag', 14)} Ready for customer`, 'var(--teal)');
     }
   } else if (isPicking) {
     const picked = o.lines.filter(l => l.picked).length;
     if (canPick()) {
       const allDone = picked === o.lines.length;
-      const label = allDone ? (o.fulfillment === 'delivery' ? '🚚 Start Delivery' : '🛍 Ready for Customer') : `🛒 Open Pick List (${picked}/${o.lines.length})`;
+      const label = allDone ? (o.fulfillment === 'delivery' ? `${ic('truck', 14)} Start Delivery` : `${ic('bag', 14)} Ready for Customer`) : `${ic('cart', 14)} Open Pick List (${picked}/${o.lines.length})`;
       primaryAction = `<button class="btn ${allDone ? 'teal' : 'purple'}" data-act="${allDone ? 'complete-pick' : 'open-pick'}" data-order="${o.id}">${label}</button>`;
     } else {
-      primaryAction = statusChip(`🛒 Being picked (${picked}/${o.lines.length})`, 'var(--purple)');
+      primaryAction = statusChip(`${ic('cart', 14)} Being picked (${picked}/${o.lines.length})`, 'var(--purple)');
     }
   } else if (allLinesPrepared(o)) {
     primaryAction = canPick()
-      ? `<button class="btn purple" data-act="start-picking" data-order="${o.id}">🛒 Start Picking</button>`
-      : statusChip('📦 Prepared — waiting for pick', 'var(--honey-light)');
+      ? `<button class="btn purple" data-act="start-picking" data-order="${o.id}">${ic('cart', 14)} Start Picking</button>`
+      : statusChip(`${ic('package', 14)} Prepared — waiting for pick`, 'var(--honey-light)');
   } else {
     primaryAction = `<button class="btn primary" data-act="advance-all" data-order="${o.id}">Advance All →</button>`;
   }
@@ -2590,7 +2629,7 @@ function render() {
     tab.classList.toggle('active', s === currentStage);
   });
 
-  document.getElementById('stageIcon').textContent = STAGE_ICONS[currentStage];
+  document.getElementById('stageIcon').innerHTML = ic(STAGE_ICON_NAMES[currentStage], 26);
   document.getElementById('stageTitle').textContent = STAGE_LABELS[currentStage];
   document.getElementById('stageCount').textContent = stageCounts[currentStage];
   document.getElementById('stageSubtitle').textContent = STAGE_SUBTITLES[currentStage];
@@ -2613,7 +2652,7 @@ function render() {
               <div class="pending-hero-seal">H</div>
               <div class="pending-hero-count">${pendingCount}</div>
               <div class="pending-hero-label">order${pendingCount === 1 ? '' : 's'} waiting to be started</div>
-              <div class="pending-hero-cta">✉ Tap to open</div>
+              <div class="pending-hero-cta">${ic('mail', 12)} Tap to open</div>
             </div>
           </button>
           ${stageJumps}
@@ -2800,12 +2839,12 @@ function applyAttention() {
   if (count > 0) {
     banner.style.display = '';
     banner.classList.toggle('urgent', urgent > 0);
-    let text;
-    if (urgent > 0) text = `⏰ ${urgent} order${urgent === 1 ? '' : 's'} due within 1 hour — act now!`;
-    else if (allPending) text = `📥 ${pending} order${pending === 1 ? '' : 's'} waiting to be started`;
-    else if (roleInfo()?.pickupTime) text = `🛒 ${count} order${count === 1 ? '' : 's'} ready to pick`;
-    else text = `📨 ${count} order${count === 1 ? '' : 's'} need${count === 1 ? 's' : ''} attention`;
-    document.getElementById('attentionText').textContent = text;
+    let html;
+    if (urgent > 0) html = `${ic('alert', 15)} ${urgent} order${urgent === 1 ? '' : 's'} due within 1 hour — act now!`;
+    else if (allPending) html = `${ic('mail', 15)} ${pending} order${pending === 1 ? '' : 's'} waiting to be started`;
+    else if (roleInfo()?.pickupTime) html = `${ic('cart', 15)} ${count} order${count === 1 ? '' : 's'} ready to pick`;
+    else html = `${ic('inbox', 15)} ${count} order${count === 1 ? '' : 's'} need${count === 1 ? 's' : ''} attention`;
+    document.getElementById('attentionText').innerHTML = html;
     banner.dataset.target = allPending ? 'pending' : (roleInfo()?.pickupTime ? 'prepared' : 'received');
   } else {
     banner.style.display = 'none';
@@ -2855,24 +2894,24 @@ function renderModalView(o) {
   let fulfillBlock = '';
   if (o.fulfillmentStage === 'enroute') {
     const since = o.timestamps.enroute ? fmtDuration(Date.now() - new Date(o.timestamps.enroute)) : '';
-    const label = o.fulfillment === 'delivery' ? '🚚 Out for Delivery' : '🛍 Ready for Customer';
+    const label = o.fulfillment === 'delivery' ? `${ic('truck', 16)} Out for Delivery` : `${ic('bag', 16)} Ready for Customer`;
     const action = o.fulfillment === 'delivery' ? 'Mark Delivered' : 'Mark Picked Up';
     fulfillBlock = `<div class="fulfillment-card">
       <div class="fulfillment-card-title">${label}</div>
       <div style="font-size:13px;color:var(--muted);margin-bottom:10px">Since ${since}</div>
-      ${canPick() ? `<button class="btn success" style="width:100%" onclick="completeOrder('${o.id}')">${action} ✓</button>` : ''}
+      ${canPick() ? `<button class="btn success" style="width:100%" onclick="completeOrder('${o.id}')">${ic('check', 14)} ${action}</button>` : ''}
     </div>`;
   } else if (o.fulfillmentStage === 'completed') {
     const total = fmtDuration(new Date(o.timestamps.completed) - new Date(o.timestamps.received));
     fulfillBlock = `<div class="fulfillment-card" style="background:linear-gradient(135deg,rgba(16,185,129,0.15),rgba(45,212,191,0.1));border-color:var(--green)">
-      <div class="fulfillment-card-title" style="color:var(--green)">✓ Completed</div>
+      <div class="fulfillment-card-title" style="color:var(--green)">${ic('check', 16)} Completed</div>
       <div style="font-size:13px;color:var(--muted)">Total time: ${total}</div>
     </div>`;
   } else if (!o.fulfillmentStage && allLinesPrepared(o)) {
     fulfillBlock = `<div class="fulfillment-card">
       <div class="fulfillment-card-title">All items prepared</div>
       <div style="font-size:13px;color:var(--muted);margin-bottom:10px">${canPick() ? `Ready to start ${o.fulfillment === 'delivery' ? 'driver pick + delivery' : 'clerk pick + handoff'}.` : `Waiting for the ${o.fulfillment === 'delivery' ? 'driver' : 'clerk'} to pick this order.`}</div>
-      ${canPick() ? `<button class="btn purple" style="width:100%" onclick="startPicking('${o.id}')">Start picking 🛒</button>` : ''}
+      ${canPick() ? `<button class="btn purple" style="width:100%" onclick="startPicking('${o.id}')">${ic('cart', 14)} Start picking</button>` : ''}
     </div>`;
   }
 
@@ -2937,7 +2976,7 @@ function renderModalView(o) {
     <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">
       <button class="btn small" onclick="togglePriority('${o.id}')">${o.priority ? 'Clear priority' : '🚨 Mark priority'}</button>
       <button class="btn small" onclick="enterEditMode('${o.id}')">✎ Edit</button>
-      ${o.fulfillmentStage === 'picking' && canPick() ? `<button class="btn small purple" onclick="openPickList('${o.id}')">🛒 Pick list</button>` : ''}
+      ${o.fulfillmentStage === 'picking' && canPick() ? `<button class="btn small purple" onclick="openPickList('${o.id}')">${ic('cart', 13)} Pick list</button>` : ''}
       <button class="btn small danger-ghost" onclick="deleteOrder('${o.id}')">Delete</button>
     </div>
 
@@ -2958,7 +2997,7 @@ function renderModalView(o) {
 }
 
 function renderModalPick(o) {
-  document.getElementById('modalTitle').innerHTML = `🛒 Picking — ${escapeHtml(o.customerName)}<button class="modal-close" id="modalClose">×</button>`;
+  document.getElementById('modalTitle').innerHTML = `${ic('cart', 18)} Picking — ${escapeHtml(o.customerName)}<button class="modal-close" id="modalClose">×</button>`;
   document.getElementById('modalClose').onclick = closeModal;
   const groups = {};
   for (const l of o.lines) (groups[l.location] = groups[l.location] || []).push(l);
@@ -2969,7 +3008,7 @@ function renderModalPick(o) {
   const fulfillmentRow = o.fulfillment === 'delivery'
     ? `<span>🚚 Delivery</span> ${o.address ? `<span>📍 ${escapeHtml(o.address)}</span>` : ''}`
     : `<span>🛍 Pickup at store</span>`;
-  const ctaLabel = o.fulfillment === 'delivery' ? 'Picking done — Start Delivery 🚚' : 'Picking done — Ready for Customer 🛍';
+  const ctaLabel = o.fulfillment === 'delivery' ? `Picking done — Start Delivery ${ic('truck', 14)}` : `Picking done — Ready for Customer ${ic('bag', 14)}`;
 
   document.getElementById('modalBody').innerHTML = `
     <div class="pick-header">
@@ -3317,7 +3356,7 @@ document.getElementById('userRole').addEventListener('change', e => {
 // Theme
 function applyTheme() {
   document.documentElement.setAttribute('data-theme', theme);
-  document.getElementById('themeToggle').textContent = theme === 'dark' ? '🌓' : '☀';
+  document.getElementById('themeToggle').innerHTML = ic(theme === 'dark' ? 'moon' : 'sun', 16);
 }
 document.getElementById('themeToggle').onclick = () => { theme = theme==='dark'?'light':'dark'; localStorage.setItem(THEME_KEY, theme); applyTheme(); };
 applyTheme();
@@ -3441,50 +3480,78 @@ function logoSVG() {
 function mascotSVG() {
   return `<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%">
     <defs>
-      <radialGradient id="mBody3" cx="0.36" cy="0.26" r="1">
-        <stop offset="0" stop-color="#52463a"/><stop offset="0.5" stop-color="#241d15"/><stop offset="1" stop-color="#100c07"/>
+      <radialGradient id="mBody4" cx="0.36" cy="0.24" r="1.05">
+        <stop offset="0" stop-color="#5a4d3f"/><stop offset="0.5" stop-color="#261e15"/><stop offset="1" stop-color="#0f0b07"/>
       </radialGradient>
-      <linearGradient id="mStripe3" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0" stop-color="#ffd863"/><stop offset="1" stop-color="#ec9a08"/>
+      <linearGradient id="mStripe4" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#ffdd6e"/><stop offset="1" stop-color="#eb9906"/>
       </linearGradient>
-      <linearGradient id="mWing3" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0" stop-color="#fffef8"/><stop offset="1" stop-color="#ddcfb2"/>
+      <linearGradient id="mWing4" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#ffffff"/><stop offset="0.6" stop-color="#f4ead3"/><stop offset="1" stop-color="#d9c9a8"/>
       </linearGradient>
-      <filter id="mBlur3" x="-60%" y="-60%" width="220%" height="220%">
+      <filter id="mBlur4" x="-60%" y="-60%" width="220%" height="220%">
         <feGaussianBlur stdDeviation="5"/>
       </filter>
-      <clipPath id="mClip3">
-        <path d="M100 60 C129 60 144 77 144 100 C144 127 126 148 100 154 C74 148 56 127 56 100 C56 77 71 60 100 60 Z"/>
+      <clipPath id="mClip4">
+        <path d="M100 56 C134 56 154 80 154 110 C154 138 130 160 100 165 C70 160 46 138 46 110 C46 80 66 56 100 56 Z"/>
       </clipPath>
     </defs>
-    <ellipse cx="100" cy="170" rx="46" ry="9" fill="rgba(0,0,0,0.45)" filter="url(#mBlur3)"/>
+    <ellipse cx="100" cy="174" rx="44" ry="8" fill="rgba(0,0,0,0.45)" filter="url(#mBlur4)"/>
+    <!-- hindwings -->
+    <ellipse cx="79" cy="63" rx="13" ry="8.5" fill="#eadbb9" opacity="0.85" transform="rotate(-42 79 63)"/>
+    <ellipse cx="121" cy="63" rx="13" ry="8.5" fill="#eadbb9" opacity="0.85" transform="rotate(42 121 63)"/>
+    <!-- forewings with flutter -->
     <g>
-      <ellipse cx="66" cy="52" rx="27" ry="17" fill="url(#mWing3)" transform="rotate(-26 66 52)">
-        <animateTransform attributeName="transform" type="rotate" values="-26 66 52;-19 66 52;-26 66 52" dur="0.55s" repeatCount="indefinite"/>
+      <ellipse cx="63" cy="52" rx="28" ry="18" fill="url(#mWing4)" transform="rotate(-28 63 52)">
+        <animateTransform attributeName="transform" type="rotate" values="-28 63 52;-20 63 52;-28 63 52" dur="0.5s" repeatCount="indefinite"/>
       </ellipse>
-      <ellipse cx="134" cy="52" rx="27" ry="17" fill="url(#mWing3)" transform="rotate(26 134 52)">
-        <animateTransform attributeName="transform" type="rotate" values="26 134 52;19 134 52;26 134 52" dur="0.55s" repeatCount="indefinite"/>
+      <ellipse cx="137" cy="52" rx="28" ry="18" fill="url(#mWing4)" transform="rotate(28 137 52)">
+        <animateTransform attributeName="transform" type="rotate" values="28 137 52;20 137 52;28 137 52" dur="0.5s" repeatCount="indefinite"/>
       </ellipse>
-      <ellipse cx="62" cy="46" rx="13" ry="6" fill="rgba(255,255,255,0.8)" transform="rotate(-26 62 46)"/>
-      <ellipse cx="138" cy="46" rx="13" ry="6" fill="rgba(255,255,255,0.8)" transform="rotate(26 138 46)"/>
+      <ellipse cx="57" cy="45" rx="13" ry="5.5" fill="rgba(255,255,255,0.85)" transform="rotate(-28 57 45)"/>
+      <ellipse cx="143" cy="45" rx="13" ry="5.5" fill="rgba(255,255,255,0.85)" transform="rotate(28 143 45)"/>
     </g>
-    <path d="M88 58 Q80 38 72 30" stroke="#17110a" stroke-width="4.5" fill="none" stroke-linecap="round"/>
-    <path d="M112 58 Q120 38 128 30" stroke="#17110a" stroke-width="4.5" fill="none" stroke-linecap="round"/>
-    <circle cx="71" cy="28" r="5" fill="#17110a"/>
-    <circle cx="129" cy="28" r="5" fill="#17110a"/>
-    <path d="M100 60 C129 60 144 77 144 100 C144 127 126 148 100 154 C74 148 56 127 56 100 C56 77 71 60 100 60 Z" fill="url(#mBody3)"/>
-    <g clip-path="url(#mClip3)">
-      <path d="M52 92 Q100 99 148 92 L148 106 Q100 113 52 106 Z" fill="url(#mStripe3)"/>
-      <path d="M52 118 Q100 125 148 118 L148 131 Q100 138 52 131 Z" fill="url(#mStripe3)"/>
-      <path d="M56 141 Q100 148 144 141 L144 151 Q100 158 56 151 Z" fill="url(#mStripe3)"/>
+    <!-- antennae with glowing tips -->
+    <path d="M86 54 Q76 32 70 26" stroke="#17110a" stroke-width="4.5" fill="none" stroke-linecap="round"/>
+    <path d="M114 54 Q124 32 130 26" stroke="#17110a" stroke-width="4.5" fill="none" stroke-linecap="round"/>
+    <circle cx="69" cy="24" r="4.8" fill="#17110a"/>
+    <circle cx="69" cy="24" r="2.2" fill="#ffd257"/>
+    <circle cx="131" cy="24" r="4.8" fill="#17110a"/>
+    <circle cx="131" cy="24" r="2.2" fill="#ffd257"/>
+    <!-- plump body -->
+    <path d="M100 56 C134 56 154 80 154 110 C154 138 130 160 100 165 C70 160 46 138 46 110 C46 80 66 56 100 56 Z" fill="url(#mBody4)"/>
+    <g clip-path="url(#mClip4)">
+      <path d="M42 96 Q100 106 158 96 L158 112 Q100 122 42 112 Z" fill="url(#mStripe4)"/>
+      <path d="M42 124 Q100 134 158 124 L158 138 Q100 148 42 138 Z" fill="url(#mStripe4)"/>
+      <path d="M50 149 Q100 158 150 149 L150 160 Q100 169 50 160 Z" fill="url(#mStripe4)"/>
     </g>
-    <path d="M96 152 L104 152 L100 164 Z" fill="#17110a"/>
-    <circle cx="87" cy="78" r="5.5" fill="#0b0805"/>
-    <circle cx="89" cy="76" r="1.8" fill="rgba(255,255,255,0.9)"/>
-    <circle cx="113" cy="78" r="5.5" fill="#0b0805"/>
-    <circle cx="115" cy="76" r="1.8" fill="rgba(255,255,255,0.9)"/>
-    <path d="M93 86 Q100 91 107 86" stroke="rgba(255,216,99,0.85)" stroke-width="2.4" fill="none" stroke-linecap="round"/>
-    <ellipse cx="80" cy="70" rx="17" ry="7" fill="rgba(255,255,255,0.22)" transform="rotate(-16 80 70)"/>
+    <!-- rim light -->
+    <path d="M140 82 Q153 104 144 132" stroke="rgba(255,214,120,0.35)" stroke-width="5" fill="none" stroke-linecap="round"/>
+    <!-- stinger -->
+    <path d="M95 162 L105 162 L100 173 Z" fill="#17110a"/>
+    <!-- big sparkly eyes -->
+    <ellipse cx="85" cy="80" rx="7" ry="8.5" fill="#0b0805"/>
+    <circle cx="87.5" cy="77" r="2.6" fill="rgba(255,255,255,0.95)"/>
+    <circle cx="83" cy="83" r="1.2" fill="rgba(255,255,255,0.5)"/>
+    <ellipse cx="115" cy="80" rx="7" ry="8.5" fill="#0b0805"/>
+    <circle cx="117.5" cy="77" r="2.6" fill="rgba(255,255,255,0.95)"/>
+    <circle cx="113" cy="83" r="1.2" fill="rgba(255,255,255,0.5)"/>
+    <!-- blush + smile -->
+    <ellipse cx="72" cy="92" rx="7" ry="4" fill="rgba(245,158,11,0.35)"/>
+    <ellipse cx="128" cy="92" rx="7" ry="4" fill="rgba(245,158,11,0.35)"/>
+    <path d="M92 90 Q100 96 108 90" stroke="#ffd863" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+    <!-- gloss sweep -->
+    <ellipse cx="80" cy="68" rx="18" ry="8" fill="rgba(255,255,255,0.2)" transform="rotate(-18 80 68)"/>
+    <!-- twinkles -->
+    <path d="M30 62 l1.6 4 4 1.6 -4 1.6 -1.6 4 -1.6 -4 -4 -1.6 4 -1.6 Z" fill="#ffd257">
+      <animate attributeName="opacity" values="0.2;0.9;0.2" dur="1.8s" repeatCount="indefinite"/>
+    </path>
+    <path d="M168 76 l1.2 3 3 1.2 -3 1.2 -1.2 3 -1.2 -3 -3 -1.2 3 -1.2 Z" fill="#ffd257">
+      <animate attributeName="opacity" values="0.8;0.2;0.8" dur="2.2s" repeatCount="indefinite"/>
+    </path>
+    <path d="M152 36 l1.9 4.6 4.6 1.9 -4.6 1.9 -1.9 4.6 -1.9 -4.6 -4.6 -1.9 4.6 -1.9 Z" fill="#ffe28a">
+      <animate attributeName="opacity" values="0.3;1;0.3" dur="1.5s" repeatCount="indefinite"/>
+    </path>
   </svg>`;
 }
 
@@ -3668,8 +3735,9 @@ document.getElementById('tourPrev').onclick = () => { tourStep = Math.max(0, tou
 document.getElementById('tourNext').onclick = () => { tourStep++; if (tourStep >= TOUR_STEPS.length) endTour(); else showTourStep(); };
 window.addEventListener('resize', () => { if (document.getElementById('tourOverlay').classList.contains('open')) showTourStep(); });
 
-// Install logo SVG once
+// Install logo SVG + static stroke icons once
 document.getElementById('logoMark').innerHTML = logoSVG();
+initStaticIcons();
 
 // ============ AUTH / LOGIN (Firebase) ============
 let loginMode = 'signin'; // 'signin' or 'bootstrap'
@@ -3970,11 +4038,11 @@ function applyRolePermissions() {
   // Update rail title based on role
   const railTitle = document.getElementById('railTitle');
   if (railTitle) {
-    if (canSeeAll()) railTitle.textContent = '📥 Inbox';
-    else if (scopeDept()) railTitle.textContent = `${info.icon} ${info.label} inbox`;
-    else if (scopeFulfillment() === 'delivery') railTitle.textContent = '🚚 To deliver';
-    else if (scopeFulfillment() === 'pickup') railTitle.textContent = '🛍 To hand off';
-    else railTitle.textContent = '📥 Inbox';
+    if (canSeeAll()) railTitle.innerHTML = `${ic('inbox', 15)} Inbox`;
+    else if (scopeDept()) railTitle.innerHTML = `${info.icon} ${info.label} inbox`;
+    else if (scopeFulfillment() === 'delivery') railTitle.innerHTML = `${ic('truck', 15)} To deliver`;
+    else if (scopeFulfillment() === 'pickup') railTitle.innerHTML = `${ic('bag', 15)} To hand off`;
+    else railTitle.innerHTML = `${ic('inbox', 15)} Inbox`;
   }
 }
 
