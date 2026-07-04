@@ -3392,65 +3392,99 @@ setInterval(() => { document.getElementById('dateLabel').textContent = new Date(
 
 // ============ SVG ILLUSTRATIONS ============
 function logoSVG() {
-  return `<svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%">
+  return `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%">
     <defs>
-      <linearGradient id="lgHex" x1="0" y1="0" x2="1" y2="1">
-        <stop offset="0%" stop-color="#fcd34d"/>
-        <stop offset="100%" stop-color="#b45309"/>
+      <linearGradient id="lgRim" x1="0" y1="0" x2="0.6" y2="1">
+        <stop offset="0" stop-color="#ffe694"/><stop offset="0.5" stop-color="#f5a623"/><stop offset="1" stop-color="#8f5406"/>
       </linearGradient>
-      <linearGradient id="lgBee" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0%" stop-color="#fcd34d"/>
-        <stop offset="100%" stop-color="#f59e0b"/>
+      <linearGradient id="lgFace" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#ffd44f"/><stop offset="1" stop-color="#e28e08"/>
       </linearGradient>
+      <radialGradient id="lgBody" cx="0.35" cy="0.28" r="1">
+        <stop offset="0" stop-color="#4d4237"/><stop offset="0.55" stop-color="#241d15"/><stop offset="1" stop-color="#120d08"/>
+      </radialGradient>
+      <linearGradient id="lgStripe" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#ffd257"/><stop offset="1" stop-color="#ef9d0a"/>
+      </linearGradient>
+      <linearGradient id="lgWing" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#fffef9"/><stop offset="1" stop-color="#e2d5ba"/>
+      </linearGradient>
+      <filter id="lgSoft" x="-60%" y="-60%" width="220%" height="220%">
+        <feGaussianBlur stdDeviation="1.8"/>
+      </filter>
+      <clipPath id="lgClip">
+        <path d="M32 21 C41 21 45.5 26.5 45.5 33 C45.5 41 39.5 47.8 32 49.8 C24.5 47.8 18.5 41 18.5 33 C18.5 26.5 23 21 32 21 Z"/>
+      </clipPath>
     </defs>
-    <path d="M24 2.5 L42 13 L42 35 L24 45.5 L6 35 L6 13 Z" fill="none" stroke="url(#lgHex)" stroke-width="2.5" stroke-linejoin="round"/>
-    <g transform="translate(24 25)">
-      <ellipse cx="-6" cy="-8" rx="6" ry="3.5" fill="rgba(255,255,255,0.55)" transform="rotate(-22)"/>
-      <ellipse cx="6" cy="-8" rx="6" ry="3.5" fill="rgba(255,255,255,0.55)" transform="rotate(22)"/>
-      <ellipse cx="0" cy="1" rx="10" ry="7" fill="url(#lgBee)"/>
-      <path d="M-9 -1 Q0 -4 9 -1" stroke="#1f1810" stroke-width="1.6" fill="none" stroke-linecap="round"/>
-      <path d="M-8 3 Q0 1 8 3" stroke="#1f1810" stroke-width="1.6" fill="none" stroke-linecap="round"/>
-      <path d="M-6 6 Q0 4 6 6" stroke="#1f1810" stroke-width="1.4" fill="none" stroke-linecap="round"/>
+    <path d="M32 2.5 58 17.2 58 46.8 32 61.5 6 46.8 6 17.2 Z" fill="url(#lgRim)"/>
+    <path d="M32 8.5 52.8 20.2 52.8 43.8 32 55.5 11.2 43.8 11.2 20.2 Z" fill="url(#lgFace)"/>
+    <path d="M11.2 20.2 32 8.5 52.8 20.2" stroke="rgba(255,255,255,0.5)" stroke-width="1.3" fill="none" stroke-linecap="round"/>
+    <path d="M11.2 43.8 32 55.5 52.8 43.8" stroke="rgba(84,44,0,0.35)" stroke-width="1.3" fill="none" stroke-linecap="round"/>
+    <ellipse cx="32" cy="50" rx="11" ry="2.6" fill="rgba(70,34,0,0.4)" filter="url(#lgSoft)"/>
+    <ellipse cx="24" cy="21.5" rx="8.4" ry="5.4" fill="url(#lgWing)" transform="rotate(-24 24 21.5)"/>
+    <ellipse cx="40" cy="21.5" rx="8.4" ry="5.4" fill="url(#lgWing)" transform="rotate(24 40 21.5)"/>
+    <ellipse cx="23" cy="19.8" rx="4.4" ry="2" fill="rgba(255,255,255,0.75)" transform="rotate(-24 23 19.8)"/>
+    <ellipse cx="41" cy="19.8" rx="4.4" ry="2" fill="rgba(255,255,255,0.75)" transform="rotate(24 41 19.8)"/>
+    <path d="M28.5 20.5 Q26.5 15 23.8 13" stroke="#1d150c" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+    <path d="M35.5 20.5 Q37.5 15 40.2 13" stroke="#1d150c" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+    <circle cx="23.5" cy="12.6" r="1.7" fill="#1d150c"/>
+    <circle cx="40.5" cy="12.6" r="1.7" fill="#1d150c"/>
+    <path d="M32 21 C41 21 45.5 26.5 45.5 33 C45.5 41 39.5 47.8 32 49.8 C24.5 47.8 18.5 41 18.5 33 C18.5 26.5 23 21 32 21 Z" fill="url(#lgBody)"/>
+    <g clip-path="url(#lgClip)">
+      <path d="M17 27.2 Q32 29.6 47 27.2 L47 32.4 Q32 34.8 17 32.4 Z" fill="url(#lgStripe)"/>
+      <path d="M17 37.6 Q32 40 47 37.6 L47 42.4 Q32 44.8 17 42.4 Z" fill="url(#lgStripe)"/>
     </g>
+    <ellipse cx="26.5" cy="24.6" rx="5.6" ry="2.6" fill="rgba(255,255,255,0.28)" transform="rotate(-14 26.5 24.6)"/>
   </svg>`;
 }
 
 function mascotSVG() {
   return `<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%">
     <defs>
-      <radialGradient id="mBody" cx="0.4" cy="0.3">
-        <stop offset="0%" stop-color="#fcd34d"/>
-        <stop offset="100%" stop-color="#f59e0b"/>
+      <radialGradient id="mBody3" cx="0.36" cy="0.26" r="1">
+        <stop offset="0" stop-color="#52463a"/><stop offset="0.5" stop-color="#241d15"/><stop offset="1" stop-color="#100c07"/>
       </radialGradient>
-      <linearGradient id="mWing" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0%" stop-color="rgba(255,255,255,0.85)"/>
-        <stop offset="100%" stop-color="rgba(255,255,255,0.15)"/>
+      <linearGradient id="mStripe3" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#ffd863"/><stop offset="1" stop-color="#ec9a08"/>
       </linearGradient>
+      <linearGradient id="mWing3" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#fffef8"/><stop offset="1" stop-color="#ddcfb2"/>
+      </linearGradient>
+      <filter id="mBlur3" x="-60%" y="-60%" width="220%" height="220%">
+        <feGaussianBlur stdDeviation="5"/>
+      </filter>
+      <clipPath id="mClip3">
+        <path d="M100 60 C129 60 144 77 144 100 C144 127 126 148 100 154 C74 148 56 127 56 100 C56 77 71 60 100 60 Z"/>
+      </clipPath>
     </defs>
-    <!-- motion trail -->
-    <path d="M30 100 Q50 80 80 95" stroke="rgba(245,158,11,0.25)" stroke-width="3" stroke-linecap="round" stroke-dasharray="2 5" fill="none"/>
-    <!-- wings -->
-    <ellipse cx="78" cy="65" rx="32" ry="22" fill="url(#mWing)" transform="rotate(-22 78 65)"/>
-    <ellipse cx="118" cy="65" rx="32" ry="22" fill="url(#mWing)" transform="rotate(22 118 65)"/>
-    <!-- body -->
-    <ellipse cx="100" cy="115" rx="58" ry="44" fill="url(#mBody)"/>
-    <!-- stripes -->
-    <path d="M50 105 Q100 95 150 105" stroke="#1f1810" stroke-width="8" fill="none" stroke-linecap="round"/>
-    <path d="M52 125 Q100 117 148 125" stroke="#1f1810" stroke-width="8" fill="none" stroke-linecap="round"/>
-    <path d="M58 142 Q100 137 142 142" stroke="#1f1810" stroke-width="6" fill="none" stroke-linecap="round"/>
-    <!-- face -->
-    <circle cx="82" cy="100" r="5" fill="#1f1810"/>
-    <circle cx="84" cy="98" r="1.5" fill="white"/>
-    <circle cx="118" cy="100" r="5" fill="#1f1810"/>
-    <circle cx="120" cy="98" r="1.5" fill="white"/>
-    <path d="M92 113 Q100 119 108 113" stroke="#1f1810" stroke-width="2.5" fill="none" stroke-linecap="round"/>
-    <!-- antennae -->
-    <path d="M82 78 Q72 62 75 50" stroke="#1f1810" stroke-width="2.5" fill="none" stroke-linecap="round"/>
-    <path d="M118 78 Q128 62 125 50" stroke="#1f1810" stroke-width="2.5" fill="none" stroke-linecap="round"/>
-    <circle cx="75" cy="50" r="3" fill="#1f1810"/>
-    <circle cx="125" cy="50" r="3" fill="#1f1810"/>
-    <!-- stinger -->
-    <path d="M156 115 L172 115 L162 122 Z" fill="#1f1810"/>
+    <ellipse cx="100" cy="170" rx="46" ry="9" fill="rgba(0,0,0,0.45)" filter="url(#mBlur3)"/>
+    <g>
+      <ellipse cx="66" cy="52" rx="27" ry="17" fill="url(#mWing3)" transform="rotate(-26 66 52)">
+        <animateTransform attributeName="transform" type="rotate" values="-26 66 52;-19 66 52;-26 66 52" dur="0.55s" repeatCount="indefinite"/>
+      </ellipse>
+      <ellipse cx="134" cy="52" rx="27" ry="17" fill="url(#mWing3)" transform="rotate(26 134 52)">
+        <animateTransform attributeName="transform" type="rotate" values="26 134 52;19 134 52;26 134 52" dur="0.55s" repeatCount="indefinite"/>
+      </ellipse>
+      <ellipse cx="62" cy="46" rx="13" ry="6" fill="rgba(255,255,255,0.8)" transform="rotate(-26 62 46)"/>
+      <ellipse cx="138" cy="46" rx="13" ry="6" fill="rgba(255,255,255,0.8)" transform="rotate(26 138 46)"/>
+    </g>
+    <path d="M88 58 Q80 38 72 30" stroke="#17110a" stroke-width="4.5" fill="none" stroke-linecap="round"/>
+    <path d="M112 58 Q120 38 128 30" stroke="#17110a" stroke-width="4.5" fill="none" stroke-linecap="round"/>
+    <circle cx="71" cy="28" r="5" fill="#17110a"/>
+    <circle cx="129" cy="28" r="5" fill="#17110a"/>
+    <path d="M100 60 C129 60 144 77 144 100 C144 127 126 148 100 154 C74 148 56 127 56 100 C56 77 71 60 100 60 Z" fill="url(#mBody3)"/>
+    <g clip-path="url(#mClip3)">
+      <path d="M52 92 Q100 99 148 92 L148 106 Q100 113 52 106 Z" fill="url(#mStripe3)"/>
+      <path d="M52 118 Q100 125 148 118 L148 131 Q100 138 52 131 Z" fill="url(#mStripe3)"/>
+      <path d="M56 141 Q100 148 144 141 L144 151 Q100 158 56 151 Z" fill="url(#mStripe3)"/>
+    </g>
+    <path d="M96 152 L104 152 L100 164 Z" fill="#17110a"/>
+    <circle cx="87" cy="78" r="5.5" fill="#0b0805"/>
+    <circle cx="89" cy="76" r="1.8" fill="rgba(255,255,255,0.9)"/>
+    <circle cx="113" cy="78" r="5.5" fill="#0b0805"/>
+    <circle cx="115" cy="76" r="1.8" fill="rgba(255,255,255,0.9)"/>
+    <path d="M93 86 Q100 91 107 86" stroke="rgba(255,216,99,0.85)" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+    <ellipse cx="80" cy="70" rx="17" ry="7" fill="rgba(255,255,255,0.22)" transform="rotate(-16 80 70)"/>
   </svg>`;
 }
 
