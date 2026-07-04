@@ -970,6 +970,21 @@
     color: var(--red); border: 1px solid var(--red);
     border-radius: 8px; font-size: 12px; text-align: center;
   }
+  /* The sign-in card keeps the dark brand treatment even in light mode —
+     the lockup's white lettering needs a dark canvas */
+  [data-theme="light"] .login-card {
+    background: linear-gradient(160deg, #1f1a14 0%, #2b251e 100%);
+    border-color: #f5a623;
+  }
+  [data-theme="light"] .login-card .login-sub,
+  [data-theme="light"] .login-card .login-hint,
+  [data-theme="light"] .login-card .login-field label { color: #a89c87; }
+  [data-theme="light"] .login-card .login-field input {
+    background: #2b251e; color: #f4ede1; border-color: #4d4131;
+  }
+  [data-theme="light"] .login-card .login-tabs { background: #2b251e; }
+  [data-theme="light"] .login-card .login-tab { color: #a89c87; }
+  [data-theme="light"] .login-card .login-tab.active { background: #1f1a14; color: #fcd34d; }
   /* User rows in Manage Users drawer */
   .user-row {
     display: grid; grid-template-columns: 1fr auto; gap: 10px;
