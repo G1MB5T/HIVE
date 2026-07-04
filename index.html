@@ -1325,6 +1325,8 @@
 
   /* ============ ICON SYSTEM ============ */
   .ic { display: inline-block; vertical-align: -0.18em; flex-shrink: 0; }
+  .logo-mark img { width: 100%; height: 100%; object-fit: contain; }
+  .banner-bee { width: 32px; height: 32px; object-fit: contain; flex-shrink: 0; filter: drop-shadow(0 2px 6px rgba(0,0,0,0.4)); }
   [data-ic] { display: inline-flex; align-items: center; }
   .stage-tab [data-ic] { margin-right: 1px; }
   .drawer-title [data-ic] { color: var(--honey-light); }
@@ -2040,6 +2042,38 @@ function unsubscribeOrders() {
   orders = [];
 }
 
+// Shared meta — customers directory, email recipients, activity history — all live in Firestore
+let _unsubMeta = [];
+function subscribeMeta() {
+  if (_unsubMeta.length) return;
+  _unsubMeta.push(onSnapshot(doc(db, 'config', 'emails'), async (snap) => {
+    if (snap.exists()) {
+      emails = { ...DEFAULT_EMAILS, ...snap.data() };
+      render();
+    } else {
+      // First device online seeds the shared settings from its local copy
+      try { await setDoc(doc(db, 'config', 'emails'), emails); } catch (e) { console.warn('emails seed', e); }
+    }
+  }, e => console.warn('emails sub', e)));
+  _unsubMeta.push(onSnapshot(collection(db, 'customers'), (snap) => {
+    if (snap.metadata.hasPendingWrites) return;
+    const merged = {};
+    snap.docs.forEach(d => { merged[d.id] = d.data(); });
+    // Push up any local-only customers from before the migration (one-time, per device)
+    for (const [k, v] of Object.entries(customers)) {
+      if (!merged[k]) { merged[k] = v; setDoc(doc(db, 'customers', k), v).catch(() => {}); }
+    }
+    customers = merged;
+    render();
+  }, e => console.warn('customers sub', e)));
+  _unsubMeta.push(onSnapshot(query(collection(db, 'history'), orderBy('ts', 'desc'), limit(150)), (snap) => {
+    if (snap.metadata.hasPendingWrites) return;
+    history = snap.docs.map(d => d.data());
+    render();
+  }, e => console.warn('history sub', e)));
+}
+function unsubscribeMeta() { _unsubMeta.forEach(u => u()); _unsubMeta = []; }
+
 function broadcast(extra={}) { /* replaced by Firestore live sync */ }
 function uid(p='') { return p + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
 
@@ -2063,12 +2097,17 @@ function isUpcoming(iso) { if (!iso) return false; const d=new Date(iso); const 
 function escapeHtml(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c])); }
 
 function addHistoryEntry(orderId, action) {
-  history.unshift({ ts: Date.now(), orderId, action, by: whoAmI() });
+  const entry = { ts: Date.now(), orderId, action, by: whoAmI() };
+  history.unshift(entry);
   history = history.slice(0, 150);
+  // Shared activity log in Firestore — everyone sees the same history
+  if (currentUser && db) setDoc(doc(db, 'history', uid('H')), entry).catch(() => {});
 }
 function rememberCustomer(o) {
-  const key = o.customerName.trim().toLowerCase(); if (!key) return;
+  const key = o.customerName.trim().toLowerCase().replace(/[\/#\[\]]/g, '_'); if (!key) return;
   customers[key] = { customerName: o.customerName, contact: o.contact, phone: o.phone, coopNumber: o.coopNumber, lastSeen: Date.now() };
+  // Shared customer directory in Firestore — autocomplete works on every device
+  if (currentUser && db) setDoc(doc(db, 'customers', key), customers[key]).catch(() => {});
 }
 
 function recipientsFor(order) {
@@ -2662,7 +2701,7 @@ function render() {
       const cta = otherStages.length ? stageJumps : `<button class="btn primary" onclick="openDrawer('drawerNew')">+ Create your first order</button>`;
       stream.innerHTML = `
         <div class="empty-state">
-          <div class="empty-mascot">${mascotSVG()}</div>
+          <div class="empty-mascot">${mascotHTML()}</div>
           <div class="empty-title">No orders in ${STAGE_LABELS[currentStage]}</div>
           <div class="empty-sub">${otherStages.length ? 'The bees are busy elsewhere.' : 'Get started by creating your first order.'}</div>
           ${cta}
@@ -2844,7 +2883,8 @@ function applyAttention() {
     else if (allPending) html = `${ic('mail', 15)} ${pending} order${pending === 1 ? '' : 's'} waiting to be started`;
     else if (roleInfo()?.pickupTime) html = `${ic('cart', 15)} ${count} order${count === 1 ? '' : 's'} ready to pick`;
     else html = `${ic('inbox', 15)} ${count} order${count === 1 ? '' : 's'} need${count === 1 ? 's' : ''} attention`;
-    document.getElementById('attentionText').innerHTML = html;
+    document.getElementById('attentionText').innerHTML = `<img src="images/bee-angry.png" class="banner-bee" alt=""> ${html}`;
+    maybeSystemNotify(needing, urgent);
     banner.dataset.target = allPending ? 'pending' : (roleInfo()?.pickupTime ? 'prepared' : 'received');
   } else {
     banner.style.display = 'none';
@@ -2859,6 +2899,21 @@ document.getElementById('attentionBanner').onclick = function() {
   if (this.dataset.target === 'pending') openDrawer('drawerPending');
   else switchStage(this.dataset.target || 'received');
 };
+
+// OS-level notifications when new work lands while the tab is hidden/minimized.
+// (True push with the app fully closed needs a server — Blaze Cloud Function, future upgrade.)
+let _notifiedIds = new Set();
+function maybeSystemNotify(needing, urgent) {
+  if (!('Notification' in window) || Notification.permission !== 'granted') return;
+  const fresh = needing.filter(o => !_notifiedIds.has(o.id));
+  needing.forEach(o => _notifiedIds.add(o.id));
+  const live = new Set(needing.map(o => o.id));
+  _notifiedIds = new Set([..._notifiedIds].filter(id => live.has(id))); // re-alert if an order regresses later
+  if (!fresh.length || !document.hidden) return;
+  const title = urgent > 0 ? 'HIVE — order due soon!' : 'HIVE — new work waiting';
+  const body = fresh.length === 1 ? `${fresh[0].customerName} needs attention` : `${fresh.length} orders need attention`;
+  try { new Notification(title, { body, icon: 'icons/icon-192.png', badge: 'icons/icon-192.png', tag: 'hive-attention' }); } catch {}
+}
 
 // Re-check every 15s — an order can cross the 1-hour threshold without any user action
 setInterval(applyAttention, 15_000);
@@ -3298,7 +3353,8 @@ document.getElementById('emailForm').addEventListener('submit', e => {
     if (out[g.id].length === 0) out[g.id] = ['',''];
   }
   emails = out; save(); render();
-  toast({ icon: '⚙', title: 'Email recipients saved', sub: 'Future orders will use these addresses.', type: 'success' });
+  if (currentUser && db) setDoc(doc(db, 'config', 'emails'), emails).catch(e => console.warn('emails save', e));
+  toast({ icon: '⚙', title: 'Email recipients saved', sub: 'Synced to every device.', type: 'success' });
   closeDrawers();
 });
 
@@ -3555,6 +3611,16 @@ function mascotSVG() {
   </svg>`;
 }
 
+// ============ BEE MOOD ============
+// Happy bee when the hive is calm; angry bee when orders are sitting unactioned.
+function hasAttention() {
+  try { return !!currentUser && orders.some(orderNeedsAction); } catch { return false; }
+}
+function beeImg(state) {
+  return `<img src="images/bee-${state}.png" alt="" style="width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 12px 26px rgba(0,0,0,0.5))">`;
+}
+function mascotHTML() { return beeImg(hasAttention() ? 'angry' : 'happy'); }
+
 // ============ CHARTS ============
 function renderChartWeekly() {
   const host = document.getElementById('chartWeekly');
@@ -3674,7 +3740,7 @@ const TOUR_STEPS = [
 let tourStep = 0;
 
 function showWelcome() {
-  document.getElementById('welcomeMascot').innerHTML = mascotSVG();
+  document.getElementById('welcomeMascot').innerHTML = beeImg('happy');
   document.getElementById('welcomeOverlay').classList.add('open');
 }
 function hideWelcome() { document.getElementById('welcomeOverlay').classList.remove('open'); }
@@ -3735,8 +3801,8 @@ document.getElementById('tourPrev').onclick = () => { tourStep = Math.max(0, tou
 document.getElementById('tourNext').onclick = () => { tourStep++; if (tourStep >= TOUR_STEPS.length) endTour(); else showTourStep(); };
 window.addEventListener('resize', () => { if (document.getElementById('tourOverlay').classList.contains('open')) showTourStep(); });
 
-// Install logo SVG + static stroke icons once
-document.getElementById('logoMark').innerHTML = logoSVG();
+// Install brand mark + static stroke icons once
+document.getElementById('logoMark').innerHTML = '<img src="images/logo-mark.png" alt="HIVE">';
 initStaticIcons();
 
 // ============ AUTH / LOGIN (Firebase) ============
@@ -3744,7 +3810,12 @@ let loginMode = 'signin'; // 'signin' or 'bootstrap'
 let authInitialized = false;
 
 async function showLogin() {
-  document.getElementById('loginMascot').innerHTML = mascotSVG();
+  // Full brand lockup on the sign-in screen (replaces the redundant title)
+  const lm = document.getElementById('loginMascot');
+  lm.style.width = 'min(300px, 72vw)'; lm.style.height = 'auto'; lm.style.animation = 'none';
+  lm.innerHTML = '<img src="images/logo-lockup.png" alt="HIVE — Connect. Organize. Elevate." style="width:100%;height:auto">';
+  const lt = document.querySelector('.login-title');
+  if (lt) lt.style.display = 'none';
   document.getElementById('loginOverlay').classList.add('open');
   document.getElementById('loginPassword').value = '';
   // Check the public bootstrap flag — anyone can read /config/bootstrap
@@ -4083,7 +4154,7 @@ function renderRail() {
     mnavInbox.textContent = items.length;
   }
   if (items.length === 0) {
-    stack.innerHTML = `<div class="envelope-empty">🐝 The hive is quiet.<br>New orders will drop in here.</div>`;
+    stack.innerHTML = `<div class="envelope-empty"><img src="images/bee-happy.png" style="width:52px;height:52px;object-fit:contain;opacity:0.75"><br>The hive is quiet.<br>New orders will drop in here.</div>`;
     return;
   }
   // Newest first, so drop-in appears at top and previous letters visually stack below
@@ -4148,6 +4219,7 @@ onAuthStateChanged(auth, async (fbUser) => {
       } catch (e) { console.warn('bootstrap backfill', e); }
     }
     subscribeOrders();
+    subscribeMeta();
     if (profile.role === 'admin') subscribeUsers();
     hideLogin();
     applyRolePermissions();
@@ -4161,9 +4233,14 @@ onAuthStateChanged(auth, async (fbUser) => {
         type: 'success'
       });
       if (!localStorage.getItem(ONBOARDING_KEY)) setTimeout(showWelcome, 500);
+      // Ask for notification permission so the angry bee can reach a hidden tab
+      if ('Notification' in window && Notification.permission === 'default') {
+        setTimeout(() => { try { Notification.requestPermission(); } catch {} }, 2000);
+      }
     }
   } else {
     unsubscribeOrders();
+    unsubscribeMeta();
     unsubscribeUsers();
     currentUser = null;
     applyRolePermissions();
