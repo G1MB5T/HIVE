@@ -2164,12 +2164,20 @@ function sendOrderEmails(order) {
   return list;
 }
 
+// Plain-text version of a line item for emails: "2 lbs of ground beef" / "12x sourdough loaves"
+function lineTextPlain(l) {
+  const qty = String(l.qty ?? '').trim();
+  if (!qty) return l.name;
+  if (!l.unit || l.unit === 'ea') return `${qty}x ${l.name}`;
+  return `${qty} ${formatUnitLabel(l.unit, qty)} of ${l.name}`;
+}
 function buildMailtoLink(order) {
+  // Always returns a link — if no recipients are configured, the To: is left blank
+  // so staff can type the managers/authorized recipients directly in Outlook.
   const list = recipientsFor(order);
-  if (list.length === 0) return null;
   const tos = [...new Set(list.map(r => r.to))].join(',');
   const subject = `New HIVE order: ${order.customerName}`;
-  const lines = order.lines.map(l => `  • ${l.qty || ''}${l.unit || ''} ${l.name} (${DEPT_LABELS[l.department]}, ${LOCATIONS[l.location].label})`).join('\n');
+  const lines = order.lines.map(l => `  - ${lineTextPlain(l)}  (${DEPT_LABELS[l.department]} / ${LOCATIONS[l.location].label})`).join('\n');
   const body = [
     `New order for ${order.customerName}`,
     order.contact ? `Contact: ${order.contact}` : '',
@@ -2177,13 +2185,15 @@ function buildMailtoLink(order) {
     order.coopNumber ? `Co-op #: ${order.coopNumber}` : '',
     `Needed by: ${fmtDateLong(order.neededDate)}`,
     `Fulfillment: ${order.fulfillment === 'delivery' ? 'Delivery' : 'Pickup'}`,
-    order.priority ? 'PRIORITY' : '',
+    order.address ? `Address: ${order.address}` : '',
+    order.priority ? '** PRIORITY **' : '',
     '',
     'Items:',
     lines,
     '',
     order.notes ? `Notes: ${order.notes}` : '',
     '',
+    `Taken by: ${order.takenBy}`,
     `— HIVE`
   ].filter(Boolean).join('\n');
   return `mailto:${tos}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
@@ -2650,11 +2660,11 @@ function renderPendingCard(o) {
       <div class="pending-customer">${o.priority ? '🚨 ' : ''}${escapeHtml(o.customerName)}</div>
       <div class="pending-meta">${escapeHtml(o.takenBy)} · ${o.fulfillment === 'delivery' ? '🚚 Delivery' : '🛍 Pickup'} · 📅 ${fmtDate(o.neededDate)} · created ${created}</div>
       <div class="pending-items">${depts.map(d => `<span class="card-dept dept-${d}">${DEPT_ICONS[d]} ${DEPT_LABELS[d]}</span>`).join(' ')}<div style="margin-top:6px">${itemsLine}</div></div>
-      <div class="pending-recipients"><strong>📧 Emails sent to ${(o.emailedTo||[]).length} recipient(s)</strong>${recipientsHtml}</div>
+      <div class="pending-recipients"><strong>📧 Suggested recipients${(o.emailedTo||[]).length ? ` (${(o.emailedTo||[]).length})` : ''}</strong>${recipientsHtml}</div>
       <div class="pending-actions">
         ${canStartOrders() ? `
-        <button class="btn primary" style="flex:1;min-width:140px" onclick="startOrder('${o.id}')">▶ Start Order</button>
-        ${mailto ? `<a class="btn small" href="${mailto}" target="_blank" rel="noopener" style="text-decoration:none;display:inline-flex;align-items:center">📤 Open email draft</a>` : ''}
+        <a class="btn primary" href="${mailto}" target="_blank" rel="noopener" style="flex:1;min-width:150px;text-decoration:none;display:inline-flex;align-items:center;justify-content:center">📤 Email in Outlook</a>
+        <button class="btn small" onclick="startOrder('${o.id}')">▶ Start Order</button>
         <button class="btn small danger-ghost" onclick="cancelPending('${o.id}')">Cancel</button>
         ` : `<div style="flex:1;padding:10px;background:var(--panel);border-radius:8px;font-size:12px;color:var(--muted);text-align:center">🔒 Waiting for Front Desk to start this order</div>`}
       </div>
@@ -3058,6 +3068,7 @@ function renderModalView(o) {
     `).join('')}
 
     <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">
+      ${canStartOrders() ? `<a class="btn small" href="${buildMailtoLink(o)}" target="_blank" rel="noopener" style="text-decoration:none;display:inline-flex;align-items:center">📤 Email in Outlook</a>` : ''}
       <button class="btn small" onclick="togglePriority('${o.id}')">${o.priority ? 'Clear priority' : '🚨 Mark priority'}</button>
       <button class="btn small" onclick="enterEditMode('${o.id}')">✎ Edit</button>
       ${o.fulfillmentStage === 'picking' && canPick() ? `<button class="btn small purple" onclick="openPickList('${o.id}')">${ic('cart', 13)} Pick list</button>` : ''}
