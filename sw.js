@@ -1,6 +1,6 @@
 // HIVE service worker — network-first for the page (so deploys show up immediately),
 // cache-first for static assets (icons). Firebase/CDN requests pass through untouched.
-const VERSION = 'hive-v7';
+const VERSION = 'hive-v8';
 
 self.addEventListener('install', () => self.skipWaiting());
 

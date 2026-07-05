@@ -783,10 +783,15 @@
     color: var(--muted);
   }
   .empty-mascot {
-    width: 140px; height: 140px;
-    margin: 0 auto 14px;
+    width: 190px; height: 190px;
+    margin: 0 auto 10px;
+    display: flex; align-items: center; justify-content: center;
+    /* Soft radial spotlight seats the bee on a dark backdrop and feathers the
+       transparent-hex remnants into a clean glow (centered = rotation-invariant) */
+    background: radial-gradient(circle at 50% 50%, rgba(30,23,15,0.92) 0%, rgba(30,23,15,0.6) 32%, rgba(30,23,15,0.15) 52%, transparent 66%);
     animation: mascotFloat 4s ease-in-out infinite;
   }
+  .empty-mascot img { width: 150px; height: 150px; }
   @keyframes mascotFloat {
     0%,100% { transform: translateY(0) rotate(-4deg); }
     50% { transform: translateY(-8px) rotate(4deg); }
@@ -817,7 +822,8 @@
     from { opacity: 0; transform: translateY(20px) scale(0.95); }
     to { opacity: 1; transform: translateY(0) scale(1); }
   }
-  .welcome-mascot { width: 130px; height: 130px; margin: 0 auto 14px; animation: mascotFloat 4s ease-in-out infinite; }
+  .welcome-mascot { width: 170px; height: 170px; margin: 0 auto 10px; display: flex; align-items: center; justify-content: center; background: radial-gradient(circle at 50% 50%, rgba(30,23,15,0.92) 0%, rgba(30,23,15,0.6) 32%, rgba(30,23,15,0.15) 52%, transparent 66%); animation: mascotFloat 4s ease-in-out infinite; }
+  .welcome-mascot img { width: 130px; height: 130px; }
   .welcome-title { font-family: 'Fraunces', serif; font-size: 32px; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 8px;
     background: linear-gradient(135deg, var(--honey-light), var(--honey));
     -webkit-background-clip: text; background-clip: text; color: transparent;
@@ -1406,7 +1412,8 @@
 
     .welcome-card, .login-card { padding: 26px 20px; }
     .role-tiles { grid-template-columns: repeat(2, 1fr); }
-    .empty-mascot { width: 110px; height: 110px; }
+    .empty-mascot { width: 160px; height: 160px; }
+    .empty-mascot img { width: 124px; height: 124px; }
 
     /* Bottom navigation */
     .mobile-nav {
